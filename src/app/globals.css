@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+/* global subtle dot-grid background */
+body {
+  background-color: #f5f7ff;
+  background-image: radial-gradient(circle, #c7d2fe 1.2px, transparent 1.2px);
+  background-size: 28px 28px;
+}
+
+/* sections that should show the dot bg */
+.dot-bg {
+  background-color: transparent !important;
+}
+
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes giftFloatLeft {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  25%       { transform: translateY(-6px) scale(1.05) rotate(-4deg); }
+  50%       { transform: translateY(-10px) scale(1.08); }
+  75%       { transform: translateY(-6px) scale(1.05) rotate(4deg); }
+}
+
+.animate-marquee         { animation: marquee 18s linear infinite; }
+.animate-gift-float-left { animation: giftFloatLeft 2.4s ease-in-out infinite; }
+
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }

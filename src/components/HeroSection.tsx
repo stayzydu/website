@@ -223,8 +223,17 @@ export default function HeroSection() {
 
             {/* wordmark */}
             <div style={{ ...fadeUp(phase >= 1, 300), width: "100%" }}>
-              <h1 className="leading-none tracking-tight text-slate-900" style={{ fontSize: "clamp(5rem,8vw,9.5rem)", fontWeight: 900 }}>
-                Stay<span className="bg-linear-to-r from-blue-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent italic" style={{ paddingRight: "8px" }}>zy</span>
+              <h1
+                className="leading-none tracking-tight italic"
+                style={{
+                  fontSize: "clamp(5rem,8vw,9.5rem)",
+                  fontWeight: 900,
+                  background: "linear-gradient(to right, #0f172a 0%, #0f172a 52%, #3b82f6 52%, #6366f1 72%, #8b5cf6 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}>
+                Stayzy
               </h1>
             </div>
 

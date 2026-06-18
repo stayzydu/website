@@ -6,8 +6,11 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminPGs from "@/components/admin/AdminPGs";
+import AdminVisits from "@/components/admin/AdminVisits";
+import AdminPaidUsers from "@/components/admin/AdminPaidUsers";
+import AdminReferrals from "@/components/admin/AdminReferrals";
 
-type Tab = "users" | "pgs";
+type Tab = "users" | "pgs" | "visits" | "paid" | "referrals";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("pgs");
@@ -46,7 +49,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-[#f8faff]">
       <Navbar />
-      <div className="pt-20 max-w-7xl mx-auto px-6 py-8">
+      <div className="pt-36 pb-8 max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-black text-slate-900">Admin Panel</h1>
           <Link href="/admin/pgs/new"
@@ -56,7 +59,7 @@ export default function AdminPage() {
         </div>
 
         <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit mb-8">
-          {([["pgs", "PG Listings"], ["users", "Users"]] as [Tab, string][]).map(([t, label]) => (
+          {([["pgs", "PG Listings"], ["visits", "Visit Requests"], ["users", "Users"], ["paid", "Paid Users"], ["referrals", "Referrals"]] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
               {label}
@@ -65,7 +68,10 @@ export default function AdminPage() {
         </div>
 
         {tab === "pgs" && <AdminPGs />}
+        {tab === "visits" && <AdminVisits />}
         {tab === "users" && <AdminUsers />}
+        {tab === "paid" && <AdminPaidUsers />}
+        {tab === "referrals" && <AdminReferrals />}
       </div>
     </div>
   );

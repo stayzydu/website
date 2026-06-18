@@ -3,118 +3,187 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { apiFetch } from "@/lib/api";
+import WishlistButton from "@/components/WishlistButton";
 
-const AMENITY_OPTIONS = ["AC", "Wi-Fi", "Laundry", "Meals", "Parking", "CCTV", "Elevator", "Power Backup"];
+const PRICE_MIN = 10000;
+const PRICE_MAX = 50000;
+const PROX_MIN = 100;
+const PROX_MAX = 900;
+
 const PG_FOR_OPTIONS = ["All", "Girls", "Boys", "Both"];
+const ROOM_TYPES = ["Single", "Double", "Triple"];
 
 type Room = { type: string; pricePerBed: number; amenities: string[]; images: { url: string }[] };
-type PG = { _id: string; name: string; location: string; pgFor: string; images: { url: string }[]; rooms: Room[]; commonAmenities: string[] };
+type PG = { _id: string; name: string; location: string; pgFor: string; images: { url: string }[]; rooms: Room[]; commonAmenities: string[]; distanceFromCampus?: number };
+
+function RangeSlider({ label, min, max, valueMin, valueMax, step, format, onChange }: {
+  label: string; min: number; max: number; valueMin: number; valueMax: number;
+  step: number; format: (v: number) => string;
+  onChange: (min: number, max: number) => void;
+}) {
+  function handleMin(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = Math.min(Number(e.target.value), valueMax - step);
+    onChange(v, valueMax);
+  }
+  function handleMax(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = Math.max(Number(e.target.value), valueMin + step);
+    onChange(valueMin, v);
+  }
+  const pMin = ((valueMin - min) / (max - min)) * 100;
+  const pMax = ((valueMax - min) / (max - min)) * 100;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</label>
+        <span className="text-xs font-semibold text-indigo-600">{format(valueMin)} – {format(valueMax)}</span>
+      </div>
+      <div className="relative h-5 flex items-center">
+        {/* track */}
+        <div className="absolute w-full h-1.5 rounded-full bg-slate-100" />
+        {/* active fill */}
+        <div className="absolute h-1.5 rounded-full bg-indigo-500"
+          style={{ left: `${pMin}%`, right: `${100 - pMax}%` }} />
+        {/* min thumb */}
+        <input type="range" min={min} max={max} step={step} value={valueMin}
+          onChange={handleMin}
+          className="absolute w-full appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-indigo-500 [&::-webkit-slider-thumb]:shadow [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-indigo-500"
+          style={{ zIndex: valueMin > max - step ? 5 : 3 }} />
+        {/* max thumb */}
+        <input type="range" min={min} max={max} step={step} value={valueMax}
+          onChange={handleMax}
+          className="absolute w-full appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-indigo-500 [&::-webkit-slider-thumb]:shadow [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-indigo-500"
+          style={{ zIndex: 4 }} />
+      </div>
+    </div>
+  );
+}
+
+function ToggleGroup({ label, options, value, onChange, multi }: {
+  label: string; options: string[];
+  value: string | string[]; multi?: boolean;
+  onChange: (v: string | string[]) => void;
+}) {
+  function toggle(o: string) {
+    if (!multi) { onChange(o); return; }
+    const arr = value as string[];
+    onChange(arr.includes(o) ? arr.filter(x => x !== o) : [...arr, o]);
+  }
+  function isActive(o: string) {
+    return multi ? (value as string[]).includes(o) : value === o;
+  }
+  return (
+    <div>
+      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2.5 block">{label}</label>
+      <div className="flex flex-wrap gap-2">
+        {options.map(o => (
+          <button key={o} onClick={() => toggle(o)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${isActive(o) ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600"}`}>
+            {o}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function PGsPage() {
   const [pgs, setPgs] = useState<PG[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // filter state
+  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN, PRICE_MAX]);
   const [pgFor, setPgFor] = useState("All");
-  const [amenities, setAmenities] = useState<string[]>([]);
-  const [search, setSearch] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  const [roomTypes, setRoomTypes] = useState<string[]>([]);
+  const [proxRange, setProxRange] = useState<[number, number]>([PROX_MIN, PROX_MAX]);
 
   useEffect(() => {
     setLoading(true);
     const params = new URLSearchParams();
     if (pgFor !== "All") params.set("pgFor", pgFor);
-    if (amenities.length) params.set("amenities", amenities.join(","));
-    if (search) params.set("search", search);
-    if (minPrice) params.set("minPrice", minPrice);
-    if (maxPrice) params.set("maxPrice", maxPrice);
+    params.set("minPrice", String(priceRange[0]));
+    params.set("maxPrice", String(priceRange[1]));
+    if (roomTypes.length) params.set("roomTypes", roomTypes.join(","));
     apiFetch(`/api/pgs?${params}`)
       .then(setPgs)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [pgFor, amenities, search, minPrice, maxPrice]);
+  }, [pgFor, priceRange, roomTypes]);
 
-  function toggleAmenity(a: string) {
-    setAmenities(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]);
-  }
-
-  function minPrice_(pg: PG) {
+  function minPricePg(pg: PG) {
     return pg.rooms.length ? Math.min(...pg.rooms.map(r => r.pricePerBed)) : 0;
   }
 
+  const hasFilters = pgFor !== "All" || roomTypes.length > 0 ||
+    priceRange[0] !== PRICE_MIN || priceRange[1] !== PRICE_MAX ||
+    proxRange[0] !== PROX_MIN || proxRange[1] !== PROX_MAX;
+
+  // client-side proximity filter (field may not exist on all PGs)
+  const filtered = pgs.filter(pg => {
+    if (pg.distanceFromCampus !== undefined) {
+      return pg.distanceFromCampus >= proxRange[0] && pg.distanceFromCampus <= proxRange[1];
+    }
+    return true;
+  });
+
   return (
-    <div className="min-h-screen bg-[#f8faff]">
+    <div className="min-h-screen" style={{ background: "#f5f7ff", backgroundImage: "radial-gradient(circle, #c7d2fe 1.2px, transparent 1.2px)", backgroundSize: "28px 28px" }}>
       <Navbar />
-      <div className="pt-20 max-w-7xl mx-auto px-6 py-8 flex gap-8">
+      <div className="pt-36 pb-8 max-w-7xl mx-auto px-6 flex gap-8">
 
-        {/* sidebar filters */}
+        {/* ── sidebar ── */}
         <aside className="w-64 shrink-0">
-          <div className="sticky top-24 bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-6">
-            <h2 className="font-bold text-slate-800 text-base">Filters</h2>
-
-            {/* search */}
-            <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Search</label>
-              <input value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="PG name or area..."
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400" />
+          <div className="sticky top-28 bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-7">
+            <div className="flex items-center justify-between">
+              <h2 className="font-black text-slate-900 text-base">Filters</h2>
+              {hasFilters && (
+                <button
+                  onClick={() => { setPgFor("All"); setRoomTypes([]); setPriceRange([PRICE_MIN, PRICE_MAX]); setProxRange([PROX_MIN, PROX_MAX]); }}
+                  className="text-xs font-semibold text-indigo-500 hover:text-indigo-700 transition-colors">
+                  Reset all
+                </button>
+              )}
             </div>
 
-            {/* PG For */}
-            <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">PG For</label>
-              <div className="flex flex-wrap gap-2">
-                {PG_FOR_OPTIONS.map(o => (
-                  <button key={o} onClick={() => setPgFor(o)}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-colors ${pgFor === o ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"}`}>
-                    {o}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <RangeSlider
+              label="Price range"
+              min={PRICE_MIN} max={PRICE_MAX} step={500}
+              valueMin={priceRange[0]} valueMax={priceRange[1]}
+              format={v => `₹${(v / 1000).toFixed(0)}k`}
+              onChange={(a, b) => setPriceRange([a, b])}
+            />
 
-            {/* price range */}
-            <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Price / bed</label>
-              <div className="flex gap-2 items-center">
-                <input value={minPrice} onChange={e => setMinPrice(e.target.value)}
-                  placeholder="Min" type="number"
-                  className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-indigo-400" />
-                <span className="text-slate-400 text-xs">–</span>
-                <input value={maxPrice} onChange={e => setMaxPrice(e.target.value)}
-                  placeholder="Max" type="number"
-                  className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-indigo-400" />
-              </div>
-            </div>
+            <ToggleGroup
+              label="PG type"
+              options={PG_FOR_OPTIONS}
+              value={pgFor}
+              onChange={v => setPgFor(v as string)}
+            />
 
-            {/* amenities */}
-            <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Amenities</label>
-              <div className="space-y-1.5">
-                {AMENITY_OPTIONS.map(a => (
-                  <label key={a} className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={amenities.includes(a)} onChange={() => toggleAmenity(a)}
-                      className="accent-slate-900 w-3.5 h-3.5" />
-                    <span className="text-sm text-slate-600">{a}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+            <ToggleGroup
+              label="Room type"
+              options={ROOM_TYPES}
+              value={roomTypes}
+              multi
+              onChange={v => setRoomTypes(v as string[])}
+            />
 
-            {(pgFor !== "All" || amenities.length || search || minPrice || maxPrice) && (
-              <button onClick={() => { setPgFor("All"); setAmenities([]); setSearch(""); setMinPrice(""); setMaxPrice(""); }}
-                className="w-full text-xs font-semibold text-red-500 hover:text-red-700 text-center">
-                Clear all filters
-              </button>
-            )}
+            <RangeSlider
+              label="College proximity"
+              min={PROX_MIN} max={PROX_MAX} step={50}
+              valueMin={proxRange[0]} valueMax={proxRange[1]}
+              format={v => `${v}m`}
+              onChange={(a, b) => setProxRange([a, b])}
+            />
           </div>
         </aside>
 
-        {/* main grid */}
+        {/* ── main grid ── */}
         <main className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-slate-900">
+            <h1 className="text-2xl font-black text-slate-900">
               PGs near Delhi University
-              {pgs.length > 0 && <span className="ml-2 text-base font-normal text-slate-400">({pgs.length} found)</span>}
+              {!loading && <span className="ml-2 text-base font-normal text-slate-400">({filtered.length} found)</span>}
             </h1>
           </div>
 
@@ -131,15 +200,15 @@ export default function PGsPage() {
                 </div>
               ))}
             </div>
-          ) : pgs.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-              <span className="text-5xl mb-4">🏠</span>
+              <p className="text-5xl mb-4">🏠</p>
               <p className="text-lg font-semibold">No PGs found</p>
               <p className="text-sm mt-1">Try adjusting your filters</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {pgs.map(pg => (
+              {filtered.map(pg => (
                 <Link key={pg._id} href={`/pgs/${pg._id}`}>
                   <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group">
                     <div className="relative h-48 bg-slate-100 overflow-hidden">
@@ -150,19 +219,20 @@ export default function PGsPage() {
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-slate-300 text-4xl">🏢</div>
                       )}
-                      <span className="absolute top-3 left-3 bg-white/90 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+                      <span className={`absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full ${pg.pgFor === "Girls" ? "bg-pink-50 text-pink-600" : pg.pgFor === "Boys" ? "bg-blue-50 text-blue-600" : "bg-purple-50 text-purple-600"}`}>
                         {pg.pgFor}
                       </span>
+                      <WishlistButton pgId={pg._id} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center" />
                     </div>
                     <div className="p-4">
                       <h3 className="font-bold text-slate-800 text-base truncate">{pg.name}</h3>
                       <p className="text-sm text-slate-400 mt-0.5">{pg.location}</p>
                       <div className="flex items-center justify-between mt-3">
                         <span className="text-slate-900 font-bold text-base">
-                          ₹{minPrice_(pg).toLocaleString()}<span className="text-slate-400 text-xs font-normal">/bed</span>
+                          ₹{minPricePg(pg).toLocaleString()}<span className="text-slate-400 text-xs font-normal">/bed</span>
                         </span>
-                        <div className="flex gap-1 flex-wrap">
-                          {pg.commonAmenities?.slice(0, 3).map(a => (
+                        <div className="flex gap-1 flex-wrap justify-end">
+                          {pg.commonAmenities?.slice(0, 2).map(a => (
                             <span key={a} className="text-xs bg-slate-50 text-slate-500 px-2 py-0.5 rounded-md border border-slate-100">{a}</span>
                           ))}
                         </div>

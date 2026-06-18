@@ -1,21 +1,33 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 
 export default function UserSync() {
   const { isSignedIn, isLoaded, user } = useUser();
+  const { getToken } = useAuth();
   const synced = useRef(false);
 
   useEffect(() => {
-    console.log("[UserSync] isLoaded=", isLoaded, "isSignedIn=", isSignedIn, "synced=", synced.current);
     if (!isLoaded || !isSignedIn || synced.current) return;
     synced.current = true;
-    console.log("[UserSync] Calling /api/sync-user for", user?.primaryEmailAddress?.emailAddress);
-    fetch("/api/sync-user", { method: "POST" })
-      .then(r => r.json())
-      .then(data => console.log("[UserSync] Sync result:", data))
-      .catch(err => console.error("[UserSync] Sync error:", err));
-  }, [isLoaded, isSignedIn, user]);
+
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch("/api/sync-user", {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) {
+          console.error("[UserSync] sync failed:", res.status);
+          synced.current = false;
+        }
+      } catch (err) {
+        console.error("[UserSync] sync error:", err);
+        synced.current = false;
+      }
+    })();
+  }, [isLoaded, isSignedIn, user?.id, getToken]);
 
   return null;
 }

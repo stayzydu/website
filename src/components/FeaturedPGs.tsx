@@ -37,7 +37,7 @@ export default function FeaturedPGs() {
   }
 
   return (
-    <section className="py-20 bg-white" id="featured">
+    <section className="pt-20 pb-10 dot-bg" id="featured">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-end justify-between mb-10">
           <div>
@@ -57,13 +57,13 @@ export default function FeaturedPGs() {
             const minPrice = Math.min(...pg.rooms.map(r => r.pricePerBed));
             const roomTypes = [...new Set(pg.rooms.map(r => r.type))].join(", ");
             return (
-              <div key={pg._id} className="shrink-0 w-72 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
-                <div className="relative h-44 overflow-hidden">
+              <div key={pg._id} className="shrink-0 w-72 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group flex flex-col">
+                <div className="relative h-44 overflow-hidden shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={pg.images[0].url} alt={pg.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <span className={`absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full ${FOR_COLOR[pg.pgFor]}`}>{pg.pgFor}</span>
                 </div>
-                <div className="p-4">
+                <div className="p-4 flex flex-col flex-1">
                   <h3 className="font-bold text-slate-900 text-base truncate">{pg.name}</h3>
                   <p className="text-xs text-slate-500 mt-0.5">📍 {pg.location}</p>
                   <div className="flex items-center justify-between mt-3">
@@ -73,14 +73,14 @@ export default function FeaturedPGs() {
                     </div>
                     <span className="text-xs text-slate-500">{roomTypes}</span>
                   </div>
-                  <div className="flex gap-1.5 flex-wrap mt-3">
+                  <div className="flex gap-1.5 flex-wrap mt-3 min-h-7">
                     {pg.commonAmenities.slice(0, 3).map(a => (
                       <span key={a} className="text-xs bg-slate-50 text-slate-600 border border-slate-100 px-2 py-0.5 rounded-full">{a}</span>
                     ))}
                     {pg.commonAmenities.length > 3 && <span className="text-xs text-slate-400">+{pg.commonAmenities.length - 3}</span>}
                   </div>
                   <Link href={`/pgs/${pg._id}`}
-                    className="mt-4 block w-full text-center py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-700 transition-colors">
+                    className="mt-auto pt-4 block w-full text-center py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-700 transition-colors">
                     View Details
                   </Link>
                 </div>

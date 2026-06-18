@@ -4,6 +4,8 @@ import { useParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { apiFetch } from "@/lib/api";
 import { HARDCODED_PGS } from "@/lib/hardcodedPGs";
+import WishlistButton from "@/components/WishlistButton";
+import BookVisitModal from "@/components/BookVisitModal";
 
 type Room = { type: string; pricePerBed: number; amenities: string[]; images: { url: string }[] };
 type PG = {
@@ -29,6 +31,7 @@ export default function PGDetailPage() {
   const [activeImg, setActiveImg] = useState(0);
   const [queryMsg, setQueryMsg] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [showBookModal, setShowBookModal] = useState(false);
 
   useEffect(() => {
     const hardcoded = HARDCODED_PGS.find(p => p._id === id);
@@ -46,7 +49,7 @@ export default function PGDetailPage() {
   if (loading) return (
     <div className="min-h-screen bg-[#f8faff]">
       <Navbar />
-      <div className="pt-24 flex items-center justify-center">
+      <div className="pt-36 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-slate-300 border-t-slate-800 rounded-full animate-spin" />
       </div>
     </div>
@@ -55,7 +58,7 @@ export default function PGDetailPage() {
   if (!pg) return (
     <div className="min-h-screen bg-[#f8faff]">
       <Navbar />
-      <div className="pt-24 text-center text-slate-400 text-lg">PG not found</div>
+      <div className="pt-36 text-center text-slate-400 text-lg">PG not found</div>
     </div>
   );
 
@@ -64,7 +67,7 @@ export default function PGDetailPage() {
   return (
     <div className="min-h-screen bg-[#f8faff]">
       <Navbar />
-      <div className="pt-20 max-w-7xl mx-auto px-6 py-8">
+      <div className="pt-36 pb-8 max-w-7xl mx-auto px-6">
 
         {/* breadcrumb */}
         <p className="text-sm text-slate-400 mb-4">
@@ -127,10 +130,13 @@ export default function PGDetailPage() {
               </div>
             </div>
 
-            <a href="#query"
-              className="block w-full text-center py-3.5 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-700 transition-colors">
-              Book a Visit →
-            </a>
+            <div className="flex gap-2">
+              <button onClick={() => setShowBookModal(true)}
+                className="flex-1 py-3.5 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-700 transition-colors text-sm">
+                Book a Visit →
+              </button>
+              <WishlistButton pgId={pg._id} className="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-red-50 transition-colors" />
+            </div>
           </div>
         </div>
 
@@ -172,7 +178,7 @@ export default function PGDetailPage() {
         <Section title="Rooms Offered">
           <div className="space-y-5">
             {pg.rooms.map((room, i) => (
-              <RoomCard key={i} room={room} />
+              <RoomCard key={i} room={room} onBook={() => setShowBookModal(true)} />
             ))}
           </div>
         </Section>
@@ -201,11 +207,15 @@ export default function PGDetailPage() {
         </Section>
 
       </div>
+
+      {showBookModal && pg && (
+        <BookVisitModal pgs={[{ _id: pg._id, name: pg.name, location: pg.location }]} onClose={() => setShowBookModal(false)} />
+      )}
     </div>
   );
 }
 
-function RoomCard({ room }: { room: Room }) {
+function RoomCard({ room, onBook }: { room: Room; onBook: () => void }) {
   const [active, setActive] = useState(0);
   return (
     <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden flex gap-0">
@@ -240,9 +250,9 @@ function RoomCard({ room }: { room: Room }) {
                 ₹{room.pricePerBed.toLocaleString()}<span className="text-slate-400 text-sm font-normal">/bed/month</span>
               </p>
             </div>
-            <a href="#query" className="shrink-0 px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-700 transition-colors">
+            <button onClick={onBook} className="shrink-0 px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-700 transition-colors">
               Book a Visit →
-            </a>
+            </button>
           </div>
           <div className="flex flex-wrap gap-2">
             {room.amenities.map(a => (

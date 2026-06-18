@@ -15,7 +15,7 @@ export default function FAQ() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className="py-20 bg-[#f8faff]" id="faq">
+    <section className="py-20 dot-bg" id="faq">
       <div className="max-w-3xl mx-auto px-6">
         <div className="text-center mb-12">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">Got questions?</p>
