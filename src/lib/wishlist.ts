@@ -1,4 +1,4 @@
-const KEY = "stayzy_wishlist";
+const KEY = "heystay_wishlist";
 
 export function getWishlist(): string[] {
   if (typeof window === "undefined") return [];

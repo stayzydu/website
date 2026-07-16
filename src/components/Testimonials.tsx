@@ -14,13 +14,13 @@ const TESTIMONIALS = [
   {
     id: 2,
     name: "Arjun Mehta",
-    content: "Me and my friend were looking for a double room near GTB Nagar and we found one through Stayzy. The wishlist thing where you can book visits for multiple PGs at once is really useful, saved us a lot of calls.",
+    content: "Me and my friend were looking for a double room near GTB Nagar and we found one through HeyStay. The wishlist thing where you can book visits for multiple PGs at once is really useful, saved us a lot of calls.",
     rating: 5,
   },
   {
     id: 3,
     name: "Sneha Gupta",
-    content: "I needed a girls only PG with a study table and decent wifi. Filtered it out on Stayzy and got exactly that. Visited 3 places in one day and locked one in by evening. Did not think it would be this fast.",
+    content: "I needed a girls only PG with a study table and decent wifi. Filtered it out on HeyStay and got exactly that. Visited 3 places in one day and locked one in by evening. Did not think it would be this fast.",
     rating: 5,
   },
   {
@@ -38,7 +38,7 @@ const TESTIMONIALS = [
   {
     id: 6,
     name: "Karan Bhatia",
-    content: "Was hunting for a PG near Mukherjee Nagar for my prep. The filters on Stayzy let me sort by meals and amenities which other sites just don't have. Found a good place without spending days on it.",
+    content: "Was hunting for a PG near Mukherjee Nagar for my prep. The filters on HeyStay let me sort by meals and amenities which other sites just don't have. Found a good place without spending days on it.",
     rating: 5,
   },
 ];
@@ -76,9 +76,13 @@ export default function Testimonials() {
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-6">
+      {/* bottom fade — blend down into the light FAQ section below */}
+      <div className="absolute bottom-0 inset-x-0 h-24 pointer-events-none z-0"
+        style={{ background: "linear-gradient(to bottom, transparent 0%, rgba(245,247,255,0.25) 55%, #f5f7ff 100%)" }} />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-6">
         <motion.div initial="hidden" animate={controls} variants={containerVariants}
-          className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24 items-center">
+          className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 lg:gap-24 items-center">
 
           {/* LEFT */}
           <motion.div variants={itemVariants} className="flex flex-col justify-center">
@@ -87,9 +91,9 @@ export default function Testimonials() {
                 <Star className="w-3.5 h-3.5 fill-indigo-400 text-indigo-400" />
                 Trusted by DU students
               </div>
-              <h2 className="text-4xl font-black text-white leading-tight">Loved by students<br />across Delhi University</h2>
+              <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight">Loved by students<br />across Delhi University</h2>
               <p className="text-slate-400 text-lg leading-relaxed max-w-md">
-                Don't just take our word for it — here's what students who found their PG through Stayzy have to say.
+                Don't just take our word for it — here's what students who found their PG through HeyStay have to say.
               </p>
               <div className="flex items-center gap-3 pt-2">
                 {TESTIMONIALS.map((_, i) => (
@@ -102,7 +106,7 @@ export default function Testimonials() {
           </motion.div>
 
           {/* RIGHT */}
-          <motion.div variants={itemVariants} className="relative min-h-80">
+          <motion.div variants={itemVariants} className="relative min-h-104 sm:min-h-80">
             {TESTIMONIALS.map((t, i) => (
               <motion.div key={t.id}
                 className="absolute inset-0"

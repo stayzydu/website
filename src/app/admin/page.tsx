@@ -49,19 +49,19 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-[#f8faff]">
       <Navbar />
-      <div className="pt-36 pb-8 max-w-7xl mx-auto px-6">
-        <div className="flex items-center justify-between mb-8">
+      <div className="pt-28 sm:pt-36 pb-8 max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-8">
           <h1 className="text-2xl font-black text-slate-900">Admin Panel</h1>
           <Link href="/admin/pgs/new"
-            className="px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-700 transition-colors">
+            className="px-4 sm:px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-700 transition-colors">
             + Add New PG
           </Link>
         </div>
 
-        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit mb-8">
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-max max-w-full overflow-x-auto mb-8">
           {([["pgs", "PG Listings"], ["visits", "Visit Requests"], ["users", "Users"], ["paid", "Paid Users"], ["referrals", "Referrals"]] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => setTab(t)}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+              className={`shrink-0 whitespace-nowrap px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
               {label}
             </button>
           ))}

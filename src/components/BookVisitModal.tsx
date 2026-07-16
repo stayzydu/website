@@ -33,7 +33,7 @@ export default function BookVisitModal({ pgs, onClose }: { pgs: PGRef[]; onClose
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
 
         {/* header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
@@ -66,7 +66,7 @@ export default function BookVisitModal({ pgs, onClose }: { pgs: PGRef[]; onClose
           ) : (
             <form onSubmit={submit} className="space-y-3 mt-2">
               {error && <p className="text-sm text-red-500 bg-red-50 rounded-xl px-3 py-2">{error}</p>}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">Full Name *</label>
                   <input required value={form.name} onChange={e => field("name", e.target.value)}

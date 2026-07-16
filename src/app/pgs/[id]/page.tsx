@@ -67,7 +67,7 @@ export default function PGDetailPage() {
   return (
     <div className="min-h-screen bg-[#f8faff]">
       <Navbar />
-      <div className="pt-36 pb-8 max-w-7xl mx-auto px-6">
+      <div className="pt-28 sm:pt-36 pb-8 max-w-7xl mx-auto px-4 sm:px-6">
 
         {/* breadcrumb */}
         <p className="text-sm text-slate-400 mb-4">
@@ -75,11 +75,11 @@ export default function PGDetailPage() {
         </p>
 
         {/* hero split */}
-        <div className="flex gap-8 mb-10">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8 mb-10">
 
           {/* image gallery */}
-          <div className="w-1/2 space-y-3">
-            <div className="rounded-2xl overflow-hidden h-80 bg-slate-100">
+          <div className="w-full md:w-1/2 space-y-3">
+            <div className="rounded-2xl overflow-hidden h-64 sm:h-80 bg-slate-100">
               {pg.images?.[activeImg] ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={pg.images[activeImg].url} alt={pg.name} className="w-full h-full object-cover" />
@@ -99,10 +99,10 @@ export default function PGDetailPage() {
           </div>
 
           {/* key info */}
-          <div className="w-1/2 space-y-5">
+          <div className="w-full md:w-1/2 space-y-5">
             <div>
               <span className="inline-block bg-indigo-50 text-indigo-600 text-xs font-semibold px-2.5 py-1 rounded-full mb-2">{pg.pgFor} Only</span>
-              <h1 className="text-3xl font-black text-slate-900 leading-tight">{pg.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">{pg.name}</h1>
               <p className="text-slate-400 mt-1 text-sm">📍 {pg.location}</p>
             </div>
 
@@ -218,9 +218,9 @@ export default function PGDetailPage() {
 function RoomCard({ room, onBook }: { room: Room; onBook: () => void }) {
   const [active, setActive] = useState(0);
   return (
-    <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden flex gap-0">
+    <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden flex flex-col sm:flex-row gap-0">
       {/* square image block */}
-      <div className="shrink-0 w-64 h-64 relative">
+      <div className="shrink-0 w-full h-56 sm:w-64 sm:h-64 relative">
         {room.images?.length > 0 ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -241,12 +241,12 @@ function RoomCard({ room, onBook }: { room: Room; onBook: () => void }) {
       </div>
 
       {/* info */}
-      <div className="flex-1 p-6 flex flex-col justify-between">
+      <div className="flex-1 p-4 sm:p-6 flex flex-col justify-between">
         <div>
           <div className="flex items-start justify-between gap-2 mb-4">
             <div>
-              <h3 className="font-bold text-slate-800 text-xl">{room.type} Sharing</h3>
-              <p className="text-3xl font-black text-slate-900 mt-1">
+              <h3 className="font-bold text-slate-800 text-lg sm:text-xl">{room.type} Sharing</h3>
+              <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
                 ₹{room.pricePerBed.toLocaleString()}<span className="text-slate-400 text-sm font-normal">/bed/month</span>
               </p>
             </div>

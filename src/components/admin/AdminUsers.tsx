@@ -70,7 +70,8 @@ export default function AdminUsers() {
   return (
     <>
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50">
               <th className="text-left px-5 py-3 font-semibold text-slate-500 text-xs uppercase tracking-wide">Name</th>
@@ -101,6 +102,7 @@ export default function AdminUsers() {
             ))}
           </tbody>
         </table>
+        </div>
         {users.length === 0 && <div className="text-center py-12 text-slate-400">No users found</div>}
       </div>
 
@@ -108,7 +110,7 @@ export default function AdminUsers() {
       {modal && (
         <div className="fixed inset-0 z-300 flex items-center justify-center px-4" onClick={() => setModal(null)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-7" onClick={e => e.stopPropagation()}>
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 sm:p-7" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-black text-slate-900 mb-1">Set up Institute</h2>
             <p className="text-slate-500 text-sm mb-5">
               Creating institute profile for <span className="font-semibold text-slate-700">{modal.user.name || modal.user.email}</span>

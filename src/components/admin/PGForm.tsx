@@ -166,7 +166,7 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
         <Field label="Location / Area" required>
           <input value={pg.location} onChange={e => field("location", e.target.value)} required className={input} placeholder="e.g. Shakti Nagar" />
         </Field>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="PG For" required>
             <select value={pg.pgFor} onChange={e => field("pgFor", e.target.value)} className={input}>
               <option>Girls</option><option>Boys</option><option>Both</option>
@@ -234,7 +234,7 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
       </FormSection>
 
       <FormSection title="Things to Know">
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <p className="text-sm font-semibold text-slate-700 mb-2">✓ Allowed</p>
             <div className="flex gap-2 mb-2">
@@ -269,7 +269,7 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
       </FormSection>
 
       <FormSection title="Map Location (Optional)">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Latitude">
             <input value={pg.mapLat} onChange={e => field("mapLat", e.target.value)} className={input} placeholder="e.g. 28.6892" type="number" step="any" />
           </Field>
@@ -289,7 +289,7 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
                   <button type="button" onClick={() => removeRoom(ri)} className="text-xs text-red-500 hover:text-red-700 font-medium">Remove</button>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Room Type">
                   <select value={room.type} onChange={e => updateRoom(ri, "type", e.target.value as "Single" | "Double" | "Triple")} className={input}>
                     {ROOM_TYPES.map(t => <option key={t}>{t}</option>)}
@@ -301,7 +301,7 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
               </div>
               <div>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Room Amenities</p>
-                <div className="grid grid-cols-3 gap-1.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                   {AMENITY_LIST.map(a => (
                     <label key={a} className="flex items-center gap-1.5 cursor-pointer">
                       <input type="checkbox" checked={room.amenities.includes(a)} onChange={() => toggleRoomAmenity(ri, a)} className="w-3 h-3 accent-slate-900" />

@@ -45,7 +45,7 @@ export default function AdminPGs() {
       {pgs.map(pg => {
         const minP = pg.rooms.length ? Math.min(...pg.rooms.map(r => r.pricePerBed)) : 0;
         return (
-          <div key={pg._id} className="bg-white border border-slate-100 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-shadow">
+          <div key={pg._id} className="bg-white border border-slate-100 rounded-2xl p-4 flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap hover:shadow-sm transition-shadow">
             <div className="w-20 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0">
               {pg.images?.[0] ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -64,7 +64,7 @@ export default function AdminPGs() {
               <p className="text-sm text-slate-400">{pg.location} · {pg.pgFor}</p>
               {minP > 0 && <p className="text-sm font-semibold text-slate-700 mt-0.5">from ₹{minP.toLocaleString()}/bed</p>}
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
               <Link href={`/pgs/${pg._id}`}
                 className="text-xs px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors font-medium">
                 View

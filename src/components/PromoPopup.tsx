@@ -104,7 +104,7 @@ export default function PromoPopup({ open, onClose }: { open: boolean; onClose: 
         amount: data.amount,
         currency: data.currency,
         order_id: data.orderId,
-        name: "Stayzy",
+        name: "HeyStay",
         description: "₹500 token — get ₹1000 off your first booking",
         prefill: { name: name.trim(), contact: phone.trim() },
         theme: { color: "#6366f1" },
@@ -131,7 +131,7 @@ export default function PromoPopup({ open, onClose }: { open: boolean; onClose: 
   return (
     <div className="fixed inset-0 z-200 flex items-center justify-center px-4" onClick={step !== "success" ? onClose : undefined}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-      <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+      <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="h-1.5 bg-linear-to-r from-indigo-500 via-pink-500 to-orange-400" />
 
         {step !== "success" && (
@@ -143,7 +143,7 @@ export default function PromoPopup({ open, onClose }: { open: boolean; onClose: 
 
         {/* OFFER */}
         {step === "offer" && (
-          <div className="p-8 text-center">
+          <div className="p-6 sm:p-8 text-center">
             <div className="flex justify-center mb-4"><GiftSVG /></div>
             <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">Limited time offer</p>
             <h2 className="text-2xl font-black text-slate-900 leading-snug mb-3">
@@ -165,7 +165,7 @@ export default function PromoPopup({ open, onClose }: { open: boolean; onClose: 
 
         {/* FORM */}
         {step === "form" && (
-          <div className="p-8">
+          <div className="p-6 sm:p-8">
             <button onClick={() => setStep("offer")} className="text-xs text-slate-400 hover:text-slate-600 mb-4 flex items-center gap-1 transition-colors">
               ← Back
             </button>
@@ -223,7 +223,7 @@ export default function PromoPopup({ open, onClose }: { open: boolean; onClose: 
 
         {/* SUCCESS */}
         {step === "success" && (
-          <div className="p-8 text-center">
+          <div className="p-6 sm:p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
               <svg viewBox="0 0 24 24" className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />

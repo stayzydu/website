@@ -79,7 +79,7 @@ export default function WishlistPage() {
   return (
     <div className="min-h-screen bg-[#f8faff]">
       <Navbar />
-      <div className="pt-36 pb-10 max-w-7xl mx-auto px-6">
+      <div className="pt-28 sm:pt-36 pb-10 max-w-7xl mx-auto px-4 sm:px-6">
 
         <div className="mb-8">
           <h1 className="text-2xl font-black text-slate-900">My Wishlist</h1>
@@ -96,7 +96,7 @@ export default function WishlistPage() {
             </Link>
           </div>
         ) : (
-          <div className="flex gap-8 items-start">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
 
             {/* LEFT — PG cards */}
             <div className="flex-1 min-w-0 space-y-4">
@@ -105,7 +105,7 @@ export default function WishlistPage() {
                 return (
                   <div key={pg._id} className="bg-white border border-slate-100 rounded-2xl overflow-hidden flex gap-0 shadow-sm">
                     {/* square image */}
-                    <div className="w-40 h-40 shrink-0 overflow-hidden">
+                    <div className="w-28 h-28 sm:w-40 sm:h-40 shrink-0 overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={pg.images?.[0]?.url || "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&q=80"}
                         alt={pg.name} className="w-full h-full object-cover" />
@@ -140,7 +140,7 @@ export default function WishlistPage() {
             </div>
 
             {/* RIGHT — booking form */}
-            <div className="w-96 shrink-0 sticky top-24">
+            <div className="w-full lg:w-96 shrink-0 lg:sticky lg:top-24">
               <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
                 <div className="px-6 py-5 border-b border-slate-100">
                   <h2 className="font-black text-slate-900 text-lg">Book a Visit</h2>

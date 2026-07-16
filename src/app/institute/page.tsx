@@ -52,15 +52,15 @@ export default function InstitutePage() {
   return (
     <div className="min-h-screen bg-[#f5f7ff]" style={{ backgroundImage: "radial-gradient(circle, #c7d2fe 1.2px, transparent 1.2px)", backgroundSize: "28px 28px" }}>
       <Navbar />
-      <div className="pt-36 pb-8 max-w-4xl mx-auto px-6">
+      <div className="pt-28 sm:pt-36 pb-8 max-w-4xl mx-auto px-4 sm:px-6">
 
         {/* header */}
-        <div className="mb-8 flex items-start justify-between">
+        <div className="mb-8 flex flex-col sm:flex-row items-start sm:justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-1">Institute Panel</p>
             <h1 className="text-2xl font-black text-slate-900">{institute.name}</h1>
           </div>
-          <div className="text-right">
+          <div className="sm:text-right">
             <p className="text-xs text-slate-400 mb-1">Your referral code</p>
             <div className="flex items-center gap-2">
               <span className="font-mono font-black text-indigo-600 text-lg bg-white border border-indigo-100 px-4 py-2 rounded-xl">
@@ -80,7 +80,7 @@ export default function InstitutePage() {
         </div>
 
         {/* stat card */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
           <div className="bg-white rounded-2xl border border-slate-100 p-6">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Total referrals</p>
             <p className="text-4xl font-black text-indigo-600">{referrals.length}</p>
@@ -105,7 +105,8 @@ export default function InstitutePage() {
               <p className="text-sm mt-1">Share your code <span className="font-mono font-bold text-indigo-600">{institute.referralCode}</span> with students</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px] text-sm">
               <thead>
                 <tr className="text-xs text-slate-400 uppercase tracking-wide border-b border-slate-100 bg-slate-50">
                   <th className="text-left px-6 py-3 font-semibold">Name</th>
@@ -125,6 +126,7 @@ export default function InstitutePage() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>

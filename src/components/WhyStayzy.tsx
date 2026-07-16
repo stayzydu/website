@@ -56,14 +56,17 @@ const FEATURES = [
 
 export default function WhyStayzy() {
   return (
-    <section className="py-24 bg-slate-900" id="about">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+    <section className="relative py-16 sm:py-24 bg-slate-900 overflow-hidden" id="about">
+      {/* top fade — blend up from the light section above */}
+      <div className="absolute top-0 inset-x-0 h-24 pointer-events-none"
+        style={{ background: "linear-gradient(to bottom, #f5f7ff 0%, rgba(245,247,255,0.25) 45%, transparent 100%)" }} />
+      <div className="relative max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
           {/* LEFT */}
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4">Why Stayzy</p>
-            <h2 className="text-5xl font-black text-white leading-tight mb-6">
+            <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4">Why HeyStay</p>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight mb-6">
               Built for one thing.<br />
               <span className="text-indigo-400">Finding your PG.</span>
             </h2>

@@ -9,12 +9,12 @@ const LINKS = {
   ],
   Learn: [
     { label: "How it Works", href: "/#how" },
-    { label: "Why Stayzy", href: "/#about" },
+    { label: "Why HeyStay", href: "/#about" },
     { label: "Testimonials", href: "/#testimonials" },
   ],
   Support: [
     { label: "FAQ", href: "/#faq" },
-    { label: "Contact Us", href: "mailto:support@stayzy.in" },
+    { label: "Contact Us", href: "mailto:support@heystay.in" },
   ],
 };
 
@@ -26,8 +26,7 @@ export default function Footer() {
           {/* brand */}
           <div className="col-span-2 sm:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <Image src="/logo.png" alt="Stayzy" width={40} height={40} className="object-contain brightness-200" />
-              <span className="text-white font-black text-xl">Stayzy</span>
+              <Image src="/Logo.png" alt="HeyStay" width={120} height={40} className="object-contain brightness-0 invert" />
             </div>
             <p className="text-sm leading-relaxed text-slate-400">
               Finding the perfect PG near Delhi University — verified and ready to move in.
@@ -49,7 +48,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-slate-500">© {new Date().getFullYear()} Stayzy. All rights reserved.</p>
+          <p className="text-xs text-slate-500">© {new Date().getFullYear()} HeyStay. All rights reserved.</p>
           <p className="text-xs text-slate-500">Made with ❤️ for DU students</p>
         </div>
       </div>

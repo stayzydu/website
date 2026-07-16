@@ -1,5 +1,5 @@
 const STEPS = [
-  { num: "01", title: "Browse & Filter", desc: "Search PGs by location, budget, gender preference, and amenities. Every listing on Stayzy is physically verified." },
+  { num: "01", title: "Browse & Filter", desc: "Search PGs by location, budget, gender preference, and amenities. Every listing on HeyStay is physically verified." },
   { num: "02", title: "Save to Wishlist", desc: "Heart the PGs you like. Add as many as you want and they sit in your wishlist ready to compare side by side." },
   { num: "03", title: "Book a Visit", desc: "Pick a date, enter your details once, and schedule visits to all your wishlisted PGs in a single form." },
   { num: "04", title: "Move In", desc: "Visit the shortlist, pick the one you like, and move in. Our team is on WhatsApp if anything comes up." },
@@ -11,7 +11,7 @@ export default function HowItWorks() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-14">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">Simple process</p>
-          <h2 className="text-3xl font-black text-slate-900">How Stayzy works</h2>
+          <h2 className="text-3xl font-black text-slate-900">How HeyStay works</h2>
           <p className="text-slate-500 mt-2 max-w-md mx-auto">Four steps from browsing to moving in</p>
         </div>
 

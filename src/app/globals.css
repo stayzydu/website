@@ -7,6 +7,13 @@ body {
   background-size: 28px 28px;
 }
 
+/* leave room for the fixed mobile bottom tab bar (hidden at lg and up) */
+@media (max-width: 1023px) {
+  body {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
+
 /* sections that should show the dot bg */
 .dot-bg {
   background-color: transparent !important;

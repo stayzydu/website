@@ -5,9 +5,9 @@ export default function PromoGiftButton({ onOpen }: { onOpen: () => void }) {
     <button
       onClick={onOpen}
       aria-label="Claim special offer"
-      className="fixed bottom-8 left-8 z-[100] animate-gift-float-left"
+      className="fixed bottom-20 left-4 lg:bottom-8 lg:left-8 z-[100] animate-gift-float-left"
       style={{ filter: "drop-shadow(0 8px 24px rgba(99,102,241,0.5))" }}>
-      <svg viewBox="0 0 72 72" className="w-16 h-16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 72 72" className="w-12 h-12 sm:w-16 sm:h-16" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* box body */}
         <rect x="8" y="34" width="56" height="34" rx="4" fill="url(#boxGrad)" />
         {/* lid */}

@@ -39,13 +39,13 @@ export default function FeaturedPGs() {
   return (
     <section className="pt-20 pb-10 dot-bg" id="featured">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex items-end justify-between mb-10">
-          <div>
+        <div className="relative mb-10">
+          <div className="text-center">
             <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">Near Delhi University</p>
             <h2 className="text-3xl font-black text-slate-900">Featured PGs</h2>
             <p className="text-slate-500 mt-1">Handpicked stays within walking distance of your campus</p>
           </div>
-          <Link href="/pgs" className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+          <Link href="/pgs" className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors absolute right-0 bottom-0">
             View all <span>→</span>
           </Link>
         </div>
@@ -57,7 +57,7 @@ export default function FeaturedPGs() {
             const minPrice = Math.min(...pg.rooms.map(r => r.pricePerBed));
             const roomTypes = [...new Set(pg.rooms.map(r => r.type))].join(", ");
             return (
-              <div key={pg._id} className="shrink-0 w-72 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group flex flex-col">
+              <div key={pg._id} className="shrink-0 w-64 sm:w-72 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group flex flex-col">
                 <div className="relative h-44 overflow-hidden shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={pg.images[0].url} alt={pg.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

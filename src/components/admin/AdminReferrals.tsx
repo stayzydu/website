@@ -70,17 +70,17 @@ export default function AdminReferrals() {
         <div key={inst._id} className="bg-white border border-slate-100 rounded-2xl overflow-hidden">
           <button
             onClick={() => toggleExpand(inst._id)}
-            className="w-full px-6 py-5 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-            <div className="flex items-center gap-5 text-left">
+            className="w-full px-4 sm:px-6 py-5 flex items-center justify-between gap-3 hover:bg-slate-50/50 transition-colors">
+            <div className="flex items-center gap-3 sm:gap-5 text-left min-w-0">
               <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
                 <span className="text-indigo-600 font-black text-sm">{inst.name.charAt(0)}</span>
               </div>
-              <div>
-                <p className="font-bold text-slate-900">{inst.name}</p>
-                <p className="text-slate-400 text-xs mt-0.5">{inst.userId?.email}</p>
+              <div className="min-w-0">
+                <p className="font-bold text-slate-900 truncate">{inst.name}</p>
+                <p className="text-slate-400 text-xs mt-0.5 truncate">{inst.userId?.email}</p>
               </div>
             </div>
-            <div className="flex items-center gap-6 shrink-0">
+            <div className="flex items-center gap-3 sm:gap-6 shrink-0">
               <div className="text-right">
                 <p className="font-mono text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">{inst.referralCode}</p>
               </div>
@@ -101,7 +101,8 @@ export default function AdminReferrals() {
               ) : referrals[inst._id]?.length === 0 ? (
                 <p className="text-slate-400 text-sm text-center py-4">No referrals claimed yet</p>
               ) : (
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto">
+                <table className="w-full min-w-[480px] text-sm">
                   <thead>
                     <tr className="text-xs text-slate-400 uppercase tracking-wide border-b border-slate-100">
                       <th className="text-left pb-2 font-semibold">Name</th>
@@ -121,6 +122,7 @@ export default function AdminReferrals() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
           )}

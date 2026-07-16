@@ -84,6 +84,75 @@ function buildWindows(b: typeof BUILDINGS[0]): Win[][] {
   return rows;
 }
 
+/* ── skyline + student illustration (shared by desktop & mobile) ── */
+function Skyline({ phase, bldPhase }: { phase: number; bldPhase: number }) {
+  return (
+    <>
+      <svg viewBox="0 0 720 384" fill="none" xmlns="http://www.w3.org/2000/svg"
+        className="block w-full h-auto" preserveAspectRatio="xMidYMid meet">
+
+        {/* background silhouette layer */}
+        {[
+          {x:0,  y:200,w:60, h:180,fill:"#dbe9f8"},{x:70, y:160,w:80, h:220,fill:"#d4e4f5"},
+          {x:160,y:120,w:90, h:260,fill:"#dbe9f8"},{x:260,y:150,w:70, h:230,fill:"#d4e4f5"},
+          {x:340,y:100,w:110,h:280,fill:"#dbe9f8"},{x:460,y:170,w:75, h:210,fill:"#d4e4f5"},
+          {x:545,y:130,w:95, h:250,fill:"#dbe9f8"},{x:650,y:160,w:70, h:220,fill:"#d4e4f5"},
+        ].map((b,i) => (
+          <rect key={`bg-${i}`} x={b.x} y={b.y} width={b.w} height={b.h} rx="3" fill={b.fill}
+            style={fadeIn(phase >= 2 && bldPhase >= i, i * 30)} />
+        ))}
+
+        {/* foreground buildings */}
+        {BUILDINGS.map((b, i) => {
+          const show = phase >= 2 && bldPhase >= i;
+          const winRows = buildWindows(b);
+          return (
+            <g key={b.id}>
+              {/* body */}
+              <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="2" fill={b.fill} style={fadeUp(show, 0)} />
+              {/* roof */}
+              {b.roofX && <rect x={b.roofX} y={b.y - 16} width={b.roofW!} height={16} rx="2" fill={b.fill} style={fadeUp(show, 80)} />}
+              {/* antenna */}
+              {b.antennaX && (
+                <g style={fadeIn(show, 180)}>
+                  <line x1={b.antennaX} y1={b.y - 16} x2={b.antennaX} y2={b.y - 46} stroke="#bfdbfe" strokeWidth="1.5" />
+                  <circle cx={b.antennaX} cy={b.y - 47} r="2.5" fill="#60a5fa" opacity="0.85" />
+                </g>
+              )}
+              {/* windows — all rows, staggered */}
+              {winRows.map((row, ri) =>
+                row.map((w, wi) => (
+                  <rect key={`${b.id}-${ri}-${wi}`}
+                    x={w.x} y={w.y} width={w.w} height={w.h} rx="2"
+                    fill={w.lit ? "#93c5fd" : "#dbeafe"}
+                    opacity={w.lit ? 0.92 : 0.48}
+                    style={fadeIn(show, 240 + ri * 50 + wi * 15)} />
+                ))
+              )}
+            </g>
+          );
+        })}
+
+        {/* ground */}
+        <rect x="0" y="380" width="720" height="4" fill="#cde0f5" style={fadeIn(phase >= 2, 300)} />
+      </svg>
+
+      {/* student */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/student-cropped.svg" alt=""
+        style={{
+          position: "absolute",
+          top: "42%", left: "28%",
+          width: "36%",
+          opacity: phase >= 3 ? 1 : 0,
+          transform: phase >= 3 ? "translate(-50%,-50%) translateY(0)" : "translate(-50%,-50%) translateY(28px)",
+          transition: "opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.22,1,0.36,1)",
+        } as React.CSSProperties}
+      />
+    </>
+  );
+}
+
 export default function HeroSection() {
   const [phase, setPhase] = useState(0);
   const [bldPhase, setBldPhase] = useState(-1);
@@ -117,11 +186,13 @@ export default function HeroSection() {
         <Orb cx="18%" cy="62%" r="300px" color="radial-gradient(circle,#fde9c8,transparent)" delay="2.5s" />
       </div>
 
-      {/* ── bottom blur + white dots ── */}
-      <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ height: "72px" }}>
-        {/* blur layer */}
-        <div className="absolute inset-0 bg-linear-to-t from-white/70 via-white/20 to-transparent"
-          style={{ backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }} />
+      {/* ── bottom blur + fade into next section ── */}
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ height: "160px" }}>
+        {/* fade to the next section's background color (#f5f7ff) so there's no hard seam */}
+        <div className="absolute inset-0"
+          style={{ background: "linear-gradient(to top, #f5f7ff 0%, #f5f7ff 18%, rgba(245,247,255,0.85) 42%, rgba(245,247,255,0.4) 70%, transparent 100%)" }} />
+        {/* soft blur only near the very bottom */}
+        <div className="absolute inset-x-0 bottom-0" style={{ height: "72px", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", maskImage: "linear-gradient(to top, black 40%, transparent 100%)", WebkitMaskImage: "linear-gradient(to top, black 40%, transparent 100%)" }} />
         {/* many small white dots over the blur */}
         {[
           {l:"2%",  b:"8px", s:2.5}, {l:"5%",  b:"24px",s:2},   {l:"8%",  b:"10px",s:3},
@@ -148,98 +219,40 @@ export default function HeroSection() {
         ))}
       </div>
 
-      {/* ── left: buildings + student ── */}
-      <div className="absolute inset-y-0 left-0 pointer-events-none z-0 flex items-center justify-center" style={{ width: "50%" }}>
-        <svg viewBox="0 0 720 384" fill="none" xmlns="http://www.w3.org/2000/svg"
-          className="block" style={{ width: "90%", height: "auto" }} preserveAspectRatio="xMidYMid meet">
-
-          {/* background silhouette layer */}
-          {[
-            {x:0,  y:200,w:60, h:180,fill:"#dbe9f8"},{x:70, y:160,w:80, h:220,fill:"#d4e4f5"},
-            {x:160,y:120,w:90, h:260,fill:"#dbe9f8"},{x:260,y:150,w:70, h:230,fill:"#d4e4f5"},
-            {x:340,y:100,w:110,h:280,fill:"#dbe9f8"},{x:460,y:170,w:75, h:210,fill:"#d4e4f5"},
-            {x:545,y:130,w:95, h:250,fill:"#dbe9f8"},{x:650,y:160,w:70, h:220,fill:"#d4e4f5"},
-          ].map((b,i) => (
-            <rect key={`bg-${i}`} x={b.x} y={b.y} width={b.w} height={b.h} rx="3" fill={b.fill}
-              style={fadeIn(phase >= 2 && bldPhase >= i, i * 30)} />
-          ))}
-
-          {/* foreground buildings */}
-          {BUILDINGS.map((b, i) => {
-            const show = phase >= 2 && bldPhase >= i;
-            const winRows = buildWindows(b);
-            return (
-              <g key={b.id}>
-                {/* body */}
-                <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="2" fill={b.fill} style={fadeUp(show, 0)} />
-                {/* roof */}
-                {b.roofX && <rect x={b.roofX} y={b.y - 16} width={b.roofW!} height={16} rx="2" fill={b.fill} style={fadeUp(show, 80)} />}
-                {/* antenna */}
-                {b.antennaX && (
-                  <g style={fadeIn(show, 180)}>
-                    <line x1={b.antennaX} y1={b.y - 16} x2={b.antennaX} y2={b.y - 46} stroke="#bfdbfe" strokeWidth="1.5" />
-                    <circle cx={b.antennaX} cy={b.y - 47} r="2.5" fill="#60a5fa" opacity="0.85" />
-                  </g>
-                )}
-                {/* windows — all rows, staggered */}
-                {winRows.map((row, ri) =>
-                  row.map((w, wi) => (
-                    <rect key={`${b.id}-${ri}-${wi}`}
-                      x={w.x} y={w.y} width={w.w} height={w.h} rx="2"
-                      fill={w.lit ? "#93c5fd" : "#dbeafe"}
-                      opacity={w.lit ? 0.92 : 0.48}
-                      style={fadeIn(show, 240 + ri * 50 + wi * 15)} />
-                  ))
-                )}
-              </g>
-            );
-          })}
-
-          {/* ground */}
-          <rect x="0" y="380" width="720" height="4" fill="#cde0f5" style={fadeIn(phase >= 2, 300)} />
-        </svg>
-
-        {/* student */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/student-cropped.svg" alt=""
-          style={{
-            position: "absolute",
-            top: "42%", left: "28%",
-            width: "36%",
-            opacity: phase >= 3 ? 1 : 0,
-            transform: phase >= 3 ? "translate(-50%,-50%) translateY(0)" : "translate(-50%,-50%) translateY(28px)",
-            transition: "opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.22,1,0.36,1)",
-          } as React.CSSProperties}
-        />
+      {/* ── left: buildings + student (desktop only) ── */}
+      <div className="hidden lg:flex absolute inset-y-0 left-0 pointer-events-none z-0 items-center justify-center" style={{ width: "50%" }}>
+        <div className="relative" style={{ width: "90%" }}>
+          <Skyline phase={phase} bldPhase={bldPhase} />
+        </div>
       </div>
 
       {/* ── layout shell ── */}
       <div className="relative z-10 min-h-screen flex">
-        <div className="shrink-0" style={{ width: "50%" }} />
+        <div className="hidden lg:block shrink-0" style={{ width: "50%" }} />
 
         {/* right — branding */}
-        <div className="flex-1 min-w-0 flex items-center justify-center px-8">
-          <div className="flex flex-col items-center text-center w-full min-w-0" style={{ marginTop: "6vh" }}>
+        <div className="flex-1 min-w-0 flex items-center justify-center px-5 sm:px-8 py-24 lg:py-0">
+          <div className="flex flex-col items-center text-center w-full min-w-0 lg:mt-[6vh]">
 
             {/* wordmark */}
             <div style={{ ...fadeUp(phase >= 1, 300), width: "100%" }}>
               <h1
                 className="leading-none tracking-tight italic"
                 style={{
-                  fontSize: "clamp(5rem,8vw,9.5rem)",
+                  fontSize: "clamp(3.25rem,12vw,9.5rem)",
                   fontWeight: 900,
-                  background: "linear-gradient(to right, #0f172a 0%, #0f172a 52%, #3b82f6 52%, #6366f1 72%, #8b5cf6 100%)",
+                  background: "linear-gradient(to right, #0f172a 0%, #0f172a 43%, #3b82f6 43%, #6366f1 72%, #8b5cf6 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
                 }}>
-                Stayzy
+                HeyStay
               </h1>
             </div>
 
-            {/* headline */}
+            {/* headline / tagline */}
             <div style={fadeUp(phase >= 4, 0)}>
-              <p className="mt-5 text-slate-600 leading-snug" style={{ fontSize: "clamp(1.4rem,2.2vw,1.9rem)", fontWeight: 600 }}>
+              <p className="mt-4 lg:mt-5 text-slate-600 leading-snug" style={{ fontSize: "clamp(1.15rem,4vw,1.9rem)", fontWeight: 600 }}>
                 Find the{" "}
                 <em className="not-italic font-black text-slate-800">perfect</em>{" "}
                 <span className="bg-linear-to-r from-blue-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent italic font-bold" style={{ paddingRight: "4px" }}>
@@ -248,16 +261,21 @@ export default function HeroSection() {
               </p>
             </div>
 
-            {/* subtext */}
-            <div style={fadeUp(phase >= 5, 0)}>
+            {/* mobile skyline — below the name/tagline (mobile only) */}
+            <div className="lg:hidden relative w-full max-w-sm mx-auto mt-8 pointer-events-none">
+              <Skyline phase={phase} bldPhase={bldPhase} />
+            </div>
+
+            {/* subtext — desktop only */}
+            <div className="hidden lg:block" style={fadeUp(phase >= 5, 0)}>
               <p className="mt-3 text-slate-400 leading-relaxed" style={{ fontSize: "1rem" }}>
                 Verified PGs near Delhi University —{" "}
                 <span className="text-slate-500 font-medium italic">rated, reviewed,</span> and ready to move in.
               </p>
             </div>
 
-            {/* CTA */}
-            <div style={fadeUp(phase >= 5, 150)}>
+            {/* CTA — desktop only */}
+            <div className="hidden lg:block" style={fadeUp(phase >= 5, 150)}>
               <button className="mt-7 px-7 py-3.5 bg-slate-900 text-white text-sm font-semibold rounded-xl tracking-wide cursor-pointer"
                 style={{ transition: "background 0.2s, transform 0.15s" }}
                 onMouseEnter={e => (e.currentTarget.style.background = "#1e293b")}

@@ -96,6 +96,7 @@ export default function PGsPage() {
   const [pgFor, setPgFor] = useState("All");
   const [roomTypes, setRoomTypes] = useState<string[]>([]);
   const [proxRange, setProxRange] = useState<[number, number]>([PROX_MIN, PROX_MAX]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -129,11 +130,19 @@ export default function PGsPage() {
   return (
     <div className="min-h-screen" style={{ background: "#f5f7ff", backgroundImage: "radial-gradient(circle, #c7d2fe 1.2px, transparent 1.2px)", backgroundSize: "28px 28px" }}>
       <Navbar />
-      <div className="pt-36 pb-8 max-w-7xl mx-auto px-6 flex gap-8">
+      <div className="pt-28 sm:pt-36 pb-8 max-w-7xl mx-auto px-4 sm:px-6 flex flex-col lg:flex-row gap-6 lg:gap-8">
+
+        {/* ── mobile filter toggle ── */}
+        <button
+          onClick={() => setFiltersOpen(o => !o)}
+          className="lg:hidden flex items-center justify-between w-full bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm font-black text-slate-900 text-sm">
+          <span>Filters{hasFilters && <span className="ml-2 text-indigo-500">• active</span>}</span>
+          <svg viewBox="0 0 24 24" className={`w-5 h-5 fill-none stroke-slate-500 transition-transform ${filtersOpen ? "rotate-180" : ""}`} strokeWidth={2} strokeLinecap="round"><path d="M6 9l6 6 6-6" /></svg>
+        </button>
 
         {/* ── sidebar ── */}
-        <aside className="w-64 shrink-0">
-          <div className="sticky top-28 bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-7">
+        <aside className={`${filtersOpen ? "block" : "hidden"} lg:block w-full lg:w-64 shrink-0`}>
+          <div className="lg:sticky lg:top-28 bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-7">
             <div className="flex items-center justify-between">
               <h2 className="font-black text-slate-900 text-base">Filters</h2>
               {hasFilters && (
