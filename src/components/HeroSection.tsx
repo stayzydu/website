@@ -28,6 +28,54 @@ function TypeLine({ show, text }: { show: boolean; text: string }) {
   );
 }
 
+/* Types out the wordmark. Reserves the final width with an invisible copy so
+   the skyline below doesn't shift while the letters land. */
+function TypeWord({ show, text, gradient, speed = 110 }: { show: boolean; text: string; gradient: string; speed?: number }) {
+  const [typed, setTyped] = useState("");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const idxRef = useRef(0);
+  useEffect(() => {
+    if (!show) return;
+    idxRef.current = 0;
+    setTyped("");
+    function tick() {
+      idxRef.current++;
+      setTyped(text.slice(0, idxRef.current));
+      if (idxRef.current < text.length) timerRef.current = setTimeout(tick, speed);
+    }
+    timerRef.current = setTimeout(tick, 150);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [show, text, speed]);
+  const done = typed.length >= text.length;
+  return (
+    <span className="relative inline-block" style={{ paddingRight: "0.12em" }}>
+      {/* invisible spacer locks the final width so nothing below shifts */}
+      <span aria-hidden className="invisible">{text}</span>
+      {/* Anchored left/top rather than inset-0: a tight box would clip the
+          italic "y" descender. Width matches the spacer so the gradient ramp
+          stays fixed as letters land. */}
+      <span className="absolute left-0 top-0 w-full text-left whitespace-nowrap"
+        style={{
+          background: gradient,
+          WebkitBackgroundClip: "text",
+          backgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          color: "transparent",
+        }}>
+        {typed}
+      </span>
+      {show && !done && (
+        <span className="absolute top-1/2 -translate-y-1/2 rounded-sm pointer-events-none"
+          style={{
+            left: `${(typed.length / text.length) * 100}%`,
+            width: "0.06em", height: "0.72em", background: "#8b5cf6",
+            animation: "pulse 0.7s ease-in-out infinite",
+          }} />
+      )}
+    </span>
+  );
+}
+
 function Orb({ cx, cy, r, color, delay }: { cx: string; cy: string; r: string; color: string; delay: string }) {
   return (
     <div className="absolute rounded-full pointer-events-none animate-orb"
@@ -168,7 +216,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative min-h-screen bg-[#f0f6ff]">
+    <section className="relative bg-[#f0f6ff]">
 
       {/* ── background ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden"
@@ -231,22 +279,24 @@ export default function HeroSection() {
         <div className="hidden lg:block shrink-0" style={{ width: "50%" }} />
 
         {/* right — branding */}
-        <div className="flex-1 min-w-0 flex items-center justify-center px-5 sm:px-8 py-24 lg:py-0">
+        <div className="flex-1 min-w-0 flex items-center justify-center px-5 sm:px-8 pt-20 pb-8 lg:py-0">
           <div className="flex flex-col items-center text-center w-full min-w-0 lg:mt-[6vh]">
 
-            {/* wordmark */}
-            <div style={{ ...fadeUp(phase >= 1, 300), width: "100%" }}>
+            {/* wordmark — types itself in (no fade-up; the typing is the entrance) */}
+            <div style={{ width: "100%" }}>
               <h1
-                className="leading-none tracking-tight italic"
+                className="leading-[1.15] tracking-tight italic"
                 style={{
                   fontSize: "clamp(3.25rem,12vw,9.5rem)",
                   fontWeight: 900,
-                  background: "linear-gradient(to right, #0f172a 0%, #0f172a 43%, #3b82f6 43%, #6366f1 72%, #8b5cf6 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
                 }}>
-                HeyStay
+                {/* gradient lives inside TypeWord — clipping it here would make
+                    the typed child spans transparent (invisible) */}
+                <TypeWord
+                  show={phase >= 1}
+                  text="HeyStay"
+                  gradient="linear-gradient(to right, #7c3aed 0%, #6366f1 45%, #8b5cf6 75%, #a855f7 100%)"
+                />
               </h1>
             </div>
 
@@ -274,9 +324,9 @@ export default function HeroSection() {
               </p>
             </div>
 
-            {/* CTA — desktop only */}
-            <div className="hidden lg:block" style={fadeUp(phase >= 5, 150)}>
-              <button className="mt-7 px-7 py-3.5 bg-slate-900 text-white text-sm font-semibold rounded-xl tracking-wide cursor-pointer"
+            {/* CTA — below the animation on mobile, after the subtext on desktop */}
+            <div style={fadeUp(phase >= 5, 150)}>
+              <button className="mt-6 lg:mt-7 px-7 py-3.5 bg-slate-900 text-white text-sm font-semibold rounded-xl tracking-wide cursor-pointer"
                 style={{ transition: "background 0.2s, transform 0.15s" }}
                 onMouseEnter={e => (e.currentTarget.style.background = "#1e293b")}
                 onMouseLeave={e => (e.currentTarget.style.background = "#0f172a")}
