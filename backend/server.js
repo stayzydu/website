@@ -16,7 +16,23 @@ import Referral from "./models/Referral.js";
 
 const app = express();
 
-app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:3000" }));
+// Allowed browser origins. FRONTEND_URL (comma-separated) adds to this list at
+// deploy time; the defaults cover production and local dev.
+const ALLOWED_ORIGINS = [
+  "https://www.heystay.info",
+  "https://heystay.info",
+  "http://localhost:3000",
+  ...(process.env.FRONTEND_URL?.split(",").map(o => o.trim()).filter(Boolean) ?? []),
+];
+
+app.use(cors({
+  origin(origin, callback) {
+    // Requests with no Origin (curl, server-to-server, health checks) are allowed.
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 app.use("/api/pgs", pgRoutes);
