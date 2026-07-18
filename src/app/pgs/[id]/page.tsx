@@ -9,8 +9,8 @@ import BookVisitModal from "@/components/BookVisitModal";
 
 type Room = { type: string; pricePerBed: number; amenities: string[]; images: { url: string }[] };
 type PG = {
-  _id: string; name: string; managerName: string; location: string; pgFor: string;
-  lockInPeriod: string; mealTypes: string[]; noticePeriod: string;
+  _id: string; name: string; location: string; pgFor: string;
+  mealTypes: string[];
   commonAmenities: string[]; thingsToKnow: { allowed: string[]; notAllowed: string[] };
   images: { url: string }[]; rooms: Room[]; mapLat?: number; mapLng?: number;
 };
@@ -112,18 +112,6 @@ export default function PGDetailPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="bg-white rounded-xl border border-slate-100 p-3">
-                <p className="text-slate-400 text-xs mb-0.5">Manager</p>
-                <p className="font-semibold text-slate-800">{pg.managerName}</p>
-              </div>
-              <div className="bg-white rounded-xl border border-slate-100 p-3">
-                <p className="text-slate-400 text-xs mb-0.5">Lock-in Period</p>
-                <p className="font-semibold text-slate-800">{pg.lockInPeriod || "—"}</p>
-              </div>
-              <div className="bg-white rounded-xl border border-slate-100 p-3">
-                <p className="text-slate-400 text-xs mb-0.5">Notice Period</p>
-                <p className="font-semibold text-slate-800">{pg.noticePeriod || "—"}</p>
-              </div>
               <div className="bg-white rounded-xl border border-slate-100 p-3">
                 <p className="text-slate-400 text-xs mb-0.5">Meals</p>
                 <p className="font-semibold text-slate-800">{pg.mealTypes?.join(", ") || "Not provided"}</p>

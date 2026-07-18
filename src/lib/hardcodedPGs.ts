@@ -2,11 +2,8 @@ export const HARDCODED_PGS = [
   {
     _id: "hc-1",
     name: "Sunrise Girls PG",
-    managerName: "Jasmeet Kaur",
     location: "Kamla Nagar",
     pgFor: "Girls",
-    lockInPeriod: "11 Months",
-    noticePeriod: "30 Days",
     mealTypes: ["Breakfast", "Dinner"],
     commonAmenities: ["Wi-Fi Availability", "AC", "CCTV Surveillance", "Laundry Service", "Power Backup", "Security Guard"],
     thingsToKnow: {
@@ -26,11 +23,8 @@ export const HARDCODED_PGS = [
   {
     _id: "hc-2",
     name: "GTB Nagar Boys PG",
-    managerName: "Rajesh Sharma",
     location: "GTB Nagar",
     pgFor: "Boys",
-    lockInPeriod: "6 Months",
-    noticePeriod: "15 Days",
     mealTypes: ["Breakfast", "Lunch", "Dinner"],
     commonAmenities: ["Wi-Fi Availability", "Study Table", "Power Backup", "Security Guard", "Parking", "CCTV Surveillance"],
     thingsToKnow: {
@@ -50,11 +44,8 @@ export const HARDCODED_PGS = [
   {
     _id: "hc-3",
     name: "Hudson Lane Residency",
-    managerName: "Priya Malhotra",
     location: "Hudson Lane",
     pgFor: "Both",
-    lockInPeriod: "11 Months",
-    noticePeriod: "30 Days",
     mealTypes: ["Breakfast", "Lunch", "Dinner", "Snacks"],
     commonAmenities: ["AC", "Wi-Fi Availability", "Elevator", "Daily Housekeeping", "Power Backup", "Common Dining Area", "CCTV Surveillance"],
     thingsToKnow: {
@@ -74,11 +65,8 @@ export const HARDCODED_PGS = [
   {
     _id: "hc-4",
     name: "DU North Campus Stay",
-    managerName: "Sunita Verma",
     location: "Chhatra Marg",
     pgFor: "Girls",
-    lockInPeriod: "11 Months",
-    noticePeriod: "30 Days",
     mealTypes: ["Breakfast", "Dinner"],
     commonAmenities: ["Wi-Fi Availability", "AC", "Daily Housekeeping", "CCTV Surveillance", "Security Guard", "Power Backup"],
     thingsToKnow: {
@@ -98,11 +86,8 @@ export const HARDCODED_PGS = [
   {
     _id: "hc-5",
     name: "Vijay Nagar Nest",
-    managerName: "Amit Gupta",
     location: "Vijay Nagar",
     pgFor: "Boys",
-    lockInPeriod: "3 Months",
-    noticePeriod: "15 Days",
     mealTypes: ["Breakfast"],
     commonAmenities: ["Wi-Fi Availability", "Fan", "Parking", "Security Guard", "Power Backup"],
     thingsToKnow: {
@@ -122,11 +107,8 @@ export const HARDCODED_PGS = [
   {
     _id: "hc-6",
     name: "Mukherjee Nagar Abode",
-    managerName: "Deepika Singh",
     location: "Mukherjee Nagar",
     pgFor: "Both",
-    lockInPeriod: "6 Months",
-    noticePeriod: "30 Days",
     mealTypes: ["Breakfast", "Lunch", "Dinner"],
     commonAmenities: ["Wi-Fi Availability", "Study Table", "Wardrobe", "Common Dining Area", "Power Backup", "CCTV Surveillance"],
     thingsToKnow: {

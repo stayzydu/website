@@ -14,15 +14,15 @@ const ROOM_TYPES = ["Single", "Double", "Triple"] as const;
 type RoomData = { type: "Single" | "Double" | "Triple"; pricePerBed: number; amenities: string[]; existingImages: { url: string; publicId: string }[]; newImages: File[] };
 
 type PGData = {
-  name: string; managerName: string; location: string; pgFor: string;
-  lockInPeriod: string; noticePeriod: string; mealTypes: string[];
+  name: string; location: string; pgFor: string;
+  mealTypes: string[];
   commonAmenities: string[]; thingsToKnow: { allowed: string[]; notAllowed: string[] };
   mapLat: string; mapLng: string; isPublished: boolean;
 };
 
 export type ExistingPG = {
-  _id: string; name: string; managerName: string; location: string; pgFor: string;
-  lockInPeriod: string; noticePeriod: string; mealTypes: string[];
+  _id: string; name: string; location: string; pgFor: string;
+  mealTypes: string[];
   commonAmenities: string[]; thingsToKnow: { allowed: string[]; notAllowed: string[] };
   mapLat?: number; mapLng?: number; isPublished: boolean;
   images: { url: string; publicId: string }[];
@@ -36,11 +36,8 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
 
   const [pg, setPg] = useState<PGData>({
     name: existing?.name ?? "",
-    managerName: existing?.managerName ?? "",
     location: existing?.location ?? "",
     pgFor: existing?.pgFor ?? "Both",
-    lockInPeriod: existing?.lockInPeriod ?? "",
-    noticePeriod: existing?.noticePeriod ?? "",
     mealTypes: existing?.mealTypes ?? [],
     commonAmenities: existing?.commonAmenities ?? [],
     thingsToKnow: existing?.thingsToKnow ?? { allowed: [], notAllowed: [] },
@@ -160,24 +157,13 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
         <Field label="PG Name" required>
           <input value={pg.name} onChange={e => field("name", e.target.value)} required className={input} placeholder="e.g. Sunrise Girls PG" />
         </Field>
-        <Field label="Manager Name" required>
-          <input value={pg.managerName} onChange={e => field("managerName", e.target.value)} required className={input} placeholder="e.g. Jasmeet Kaur" />
-        </Field>
         <Field label="Location / Area" required>
           <input value={pg.location} onChange={e => field("location", e.target.value)} required className={input} placeholder="e.g. Shakti Nagar" />
         </Field>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="PG For" required>
-            <select value={pg.pgFor} onChange={e => field("pgFor", e.target.value)} className={input}>
-              <option>Girls</option><option>Boys</option><option>Both</option>
-            </select>
-          </Field>
-          <Field label="Lock-in Period">
-            <input value={pg.lockInPeriod} onChange={e => field("lockInPeriod", e.target.value)} className={input} placeholder="e.g. 11 Months" />
-          </Field>
-        </div>
-        <Field label="Notice Period">
-          <input value={pg.noticePeriod} onChange={e => field("noticePeriod", e.target.value)} className={input} placeholder="e.g. 30 Days" />
+        <Field label="PG For" required>
+          <select value={pg.pgFor} onChange={e => field("pgFor", e.target.value)} className={input}>
+            <option>Girls</option><option>Boys</option><option>Both</option>
+          </select>
         </Field>
         <Field label="Publish">
           <label className="flex items-center gap-2 cursor-pointer">
