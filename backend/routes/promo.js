@@ -1,7 +1,8 @@
 import express from "express";
 import Razorpay from "razorpay";
 import crypto from "crypto";
-import PromoPayment from "../models/PromoPayment.js";
+import Lead from "../models/Lead.js";
+import PaidLead from "../models/PaidLead.js";
 import Institute from "../models/Institute.js";
 import Referral from "../models/Referral.js";
 import { requireAdmin } from "../lib/clerkAuth.js";
@@ -15,26 +16,60 @@ function getRazorpay() {
   });
 }
 
-// Create Razorpay order
+// Resolve an optional referral code → { instituteName, resolvedCode }.
+async function resolveReferral(referralCode) {
+  if (!referralCode || !referralCode.trim()) return { instituteName: null, resolvedCode: null };
+  const institute = await Institute.findOne({ referralCode: referralCode.trim().toUpperCase() });
+  return institute
+    ? { instituteName: institute.name, resolvedCode: institute.referralCode }
+    : { instituteName: null, resolvedCode: null };
+}
+
+// Build the lead detail fields common to save-lead and create-order.
+function leadDetails({ name, phone, budget, college, visitDate, resolvedCode, instituteName }) {
+  return {
+    name,
+    phone,
+    budget: budget != null && budget !== "" ? Number(budget) : null,
+    college: college?.trim() || "",
+    visitDate: visitDate || "",
+    referralCode: resolvedCode,
+    instituteName,
+  };
+}
+
+// Save (or refresh) the LEAD as soon as the form is filled — before payment,
+// so it's captured even if they never pay. Upsert by phone into `leads`.
+router.post("/save-lead", async (req, res) => {
+  try {
+    const { name, phone, referralCode, budget, college, visitDate } = req.body;
+    if (!name || !phone) return res.status(400).json({ error: "Name and phone required" });
+    const cleanPhone = phone.trim();
+
+    const { instituteName, resolvedCode } = await resolveReferral(referralCode);
+    const details = leadDetails({ name, phone: cleanPhone, budget, college, visitDate, resolvedCode, instituteName });
+
+    await Lead.findOneAndUpdate(
+      { phone: cleanPhone },
+      { $set: details },            // don't touch `paid` — a paid lead stays paid
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    res.json({ saved: true });
+  } catch (err) {
+    console.error("[promo/save-lead]", err);
+    res.status(500).json({ error: err.message || "Failed to save lead" });
+  }
+});
+
+// Create Razorpay order (also ensures the lead exists / is refreshed)
 router.post("/create-order", async (req, res) => {
   try {
-    const { name, phone, referralCode } = req.body;
+    const { name, phone, referralCode, budget, college, visitDate } = req.body;
     if (!name || !phone) return res.status(400).json({ error: "Name and phone required" });
+    const cleanPhone = phone.trim();
 
-    // Block reuse of same phone number
-    const existing = await PromoPayment.findOne({ phone: phone.trim() });
-    if (existing) return res.status(400).json({ error: "This number has already been used for a payment" });
-
-    // Resolve referral
-    let instituteName = null;
-    let resolvedCode = null;
-    if (referralCode && referralCode.trim()) {
-      const institute = await Institute.findOne({ referralCode: referralCode.trim().toUpperCase() });
-      if (institute) {
-        instituteName = institute.name;
-        resolvedCode = institute.referralCode;
-      }
-    }
+    const { instituteName, resolvedCode } = await resolveReferral(referralCode);
 
     const razorpay = getRazorpay();
     const order = await razorpay.orders.create({
@@ -43,13 +78,16 @@ router.post("/create-order", async (req, res) => {
       receipt: `promo_${Date.now()}`,
     });
 
-    await PromoPayment.create({
-      name,
-      phone: phone.trim(),
+    // Refresh the lead and stamp the latest order id (so verify can find it).
+    const details = {
+      ...leadDetails({ name, phone: cleanPhone, budget, college, visitDate, resolvedCode, instituteName }),
       razorpayOrderId: order.id,
-      referralCode: resolvedCode,
-      instituteName,
-    });
+    };
+    await Lead.findOneAndUpdate(
+      { phone: cleanPhone },
+      { $set: details },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
     res.json({
       orderId: order.id,
@@ -64,7 +102,7 @@ router.post("/create-order", async (req, res) => {
   }
 });
 
-// Verify payment — also records referral claim
+// Verify payment — mark the lead paid AND create a PaidLead record.
 router.post("/verify", async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
@@ -78,24 +116,41 @@ router.post("/verify", async (req, res) => {
       return res.status(400).json({ error: "Invalid signature" });
     }
 
-    const payment = await PromoPayment.findOneAndUpdate(
+    // Find the lead this order belongs to and flag it paid (kept in `leads`).
+    const lead = await Lead.findOneAndUpdate(
       { razorpayOrderId: razorpay_order_id },
-      { razorpayPaymentId: razorpay_payment_id, status: "paid" },
+      { $set: { paid: true } },
       { new: true }
     );
+    if (!lead) return res.status(404).json({ error: "Lead not found for this order" });
 
-    // Record referral if code was used
-    if (payment?.referralCode) {
-      const institute = await Institute.findOne({ referralCode: payment.referralCode });
+    // Copy into the paid-leads collection (idempotent by phone).
+    await PaidLead.findOneAndUpdate(
+      { phone: lead.phone },
+      {
+        $set: {
+          name: lead.name,
+          phone: lead.phone,
+          budget: lead.budget,
+          college: lead.college,
+          visitDate: lead.visitDate,
+          referralCode: lead.referralCode,
+          instituteName: lead.instituteName,
+          amount: 500,
+          razorpayOrderId: razorpay_order_id,
+          razorpayPaymentId: razorpay_payment_id,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    // Record the institute referral claim if a code was used.
+    if (lead.referralCode) {
+      const institute = await Institute.findOne({ referralCode: lead.referralCode });
       if (institute) {
-        // idempotent — skip if phone already recorded
-        const alreadyClaimed = await Referral.findOne({ phone: payment.phone });
+        const alreadyClaimed = await Referral.findOne({ phone: lead.phone });
         if (!alreadyClaimed) {
-          await Referral.create({
-            instituteId: institute._id,
-            name: payment.name,
-            phone: payment.phone,
-          });
+          await Referral.create({ instituteId: institute._id, name: lead.name, phone: lead.phone });
         }
       }
     }
@@ -107,13 +162,33 @@ router.post("/verify", async (req, res) => {
   }
 });
 
-// Admin — get all payments
+// Admin — all leads (filled the form; may or may not have paid)
+router.get("/leads", requireAdmin, async (req, res) => {
+  try {
+    const leads = await Lead.find().sort({ createdAt: -1 });
+    res.json(leads);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch leads" });
+  }
+});
+
+// Admin — paid leads only
+router.get("/paid-leads", requireAdmin, async (req, res) => {
+  try {
+    const paid = await PaidLead.find().sort({ createdAt: -1 });
+    res.json(paid);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch paid leads" });
+  }
+});
+
+// Back-compat alias for the old Paid Users tab.
 router.get("/payments", requireAdmin, async (req, res) => {
   try {
-    const payments = await PromoPayment.find().sort({ createdAt: -1 });
-    res.json(payments);
+    const paid = await PaidLead.find().sort({ createdAt: -1 });
+    res.json(paid);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch payments" });
+    res.status(500).json({ error: "Failed to fetch paid leads" });
   }
 });
 

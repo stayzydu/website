@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
@@ -11,7 +11,14 @@ const AMENITY_LIST = ["Bed", "AC", "Study Table", "Chair", "Fan", "Wardrobe", "B
 const MEAL_LIST = ["Breakfast", "Lunch", "Dinner", "Snacks"];
 const ROOM_TYPES = ["Single", "Double", "Triple"] as const;
 
-type RoomData = { type: "Single" | "Double" | "Triple"; pricePerBed: number; amenities: string[]; existingImages: { url: string; publicId: string }[]; newImages: File[] };
+type RoomData = {
+  type: "Single" | "Double" | "Triple";
+  pricePerBed: number;
+  amenities: string[];
+  existingImages: { url: string; publicId: string }[];
+  keepImageIds: string[]; // publicIds of existing room images to keep on save
+  newImages: File[];
+};
 
 type PGData = {
   name: string; location: string; pgFor: string;
@@ -55,9 +62,10 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
           pricePerBed: r.pricePerBed,
           amenities: r.amenities,
           existingImages: r.images,
+          keepImageIds: r.images.map(i => i.publicId),
           newImages: [],
         }))
-      : [{ type: "Single", pricePerBed: 0, amenities: [], existingImages: [], newImages: [] }]
+      : [{ type: "Single", pricePerBed: 0, amenities: [], existingImages: [], keepImageIds: [], newImages: [] }]
   );
   const [allowedInput, setAllowedInput] = useState("");
   const [notAllowedInput, setNotAllowedInput] = useState("");
@@ -67,6 +75,38 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
   function field(k: keyof PGData, value: string | boolean | string[]) {
     setPg(p => ({ ...p, [k]: value }));
   }
+
+  // Append every picked file, no restrictions — duplicates by name/size are
+  // allowed, and there's no count/size cap. The admin decides what to upload.
+  function addCoverImages(fileList: FileList | null) {
+    setError("");
+    const picked = fileList ? Array.from(fileList) : [];
+    if (picked.length === 0) return;
+    setCoverImages(prev => [...prev, ...picked]);
+  }
+
+  function removeCoverImage(i: number) {
+    setCoverImages(prev => prev.filter((_, idx) => idx !== i));
+  }
+
+  // Object URLs for previewing the newly-picked files. Generated in an effect so
+  // the URLs are only revoked on the NEXT change/unmount — never the ones currently
+  // being rendered (which was blanking the previews).
+  const [coverPreviews, setCoverPreviews] = useState<string[]>([]);
+  useEffect(() => {
+    const urls = coverImages.map(f => URL.createObjectURL(f));
+    setCoverPreviews(urls);
+    return () => { urls.forEach(u => URL.revokeObjectURL(u)); };
+  }, [coverImages]);
+
+  // Previews for newly-picked room images: one array of object URLs per room.
+  const [roomPreviews, setRoomPreviews] = useState<string[][]>([]);
+  useEffect(() => {
+    const urls = rooms.map(r => r.newImages.map(f => URL.createObjectURL(f)));
+    setRoomPreviews(urls);
+    return () => { urls.flat().forEach(u => URL.revokeObjectURL(u)); };
+    // Re-run whenever the set of picked room files changes.
+  }, [rooms]);
 
   function toggleAmenity(a: string) {
     setPg(p => ({ ...p, commonAmenities: p.commonAmenities.includes(a) ? p.commonAmenities.filter(x => x !== a) : [...p.commonAmenities, a] }));
@@ -99,7 +139,26 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
   }
 
   function addRoom() {
-    setRooms(prev => [...prev, { type: "Single", pricePerBed: 0, amenities: [], existingImages: [], newImages: [] }]);
+    setRooms(prev => [...prev, { type: "Single", pricePerBed: 0, amenities: [], existingImages: [], keepImageIds: [], newImages: [] }]);
+  }
+
+  // Append picked room images (no replace, no dedupe, no cap).
+  function addRoomImages(ri: number, fileList: FileList | null) {
+    const picked = fileList ? Array.from(fileList) : [];
+    if (picked.length === 0) return;
+    setRooms(prev => prev.map((r, i) => i === ri ? { ...r, newImages: [...r.newImages, ...picked] } : r));
+  }
+
+  function removeNewRoomImage(ri: number, imgIdx: number) {
+    setRooms(prev => prev.map((r, i) => i === ri ? { ...r, newImages: r.newImages.filter((_, j) => j !== imgIdx) } : r));
+  }
+
+  function toggleKeepRoomImage(ri: number, publicId: string) {
+    setRooms(prev => prev.map((r, i) => {
+      if (i !== ri) return r;
+      const kept = r.keepImageIds.includes(publicId);
+      return { ...r, keepImageIds: kept ? r.keepImageIds.filter(id => id !== publicId) : [...r.keepImageIds, publicId] };
+    }));
   }
 
   function removeRoom(i: number) {
@@ -118,13 +177,25 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
         ...pg,
         mapLat: pg.mapLat ? Number(pg.mapLat) : undefined,
         mapLng: pg.mapLng ? Number(pg.mapLng) : undefined,
-        rooms: rooms.map(r => ({ type: r.type, pricePerBed: r.pricePerBed, amenities: r.amenities })),
+        // Per room, keep only the existing images the admin didn't delete.
+        rooms: rooms.map(r => ({
+          type: r.type,
+          pricePerBed: r.pricePerBed,
+          amenities: r.amenities,
+          keepImageIds: r.keepImageIds,
+        })),
         keepImages,
       };
 
       const form = new FormData();
       form.append("data", JSON.stringify(data));
+      // PG cover images.
       coverImages.forEach(f => form.append("images", f));
+      // Room images, tagged by room index so the backend can attach each to the
+      // right room (field name: roomImages_<index>).
+      rooms.forEach((r, ri) => {
+        r.newImages.forEach(f => form.append(`roomImages_${ri}`, f));
+      });
 
       const url = isEdit ? `${process.env.NEXT_PUBLIC_API_URL}/api/pgs/${existing!._id}` : `${process.env.NEXT_PUBLIC_API_URL}/api/pgs`;
       const method = isEdit ? "PATCH" : "POST";
@@ -184,28 +255,103 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
         </div>
       </FormSection>
 
-      <FormSection title="Cover Images">
-        <input type="file" multiple accept="image/*" onChange={e => setCoverImages(Array.from(e.target.files || []))}
-          className="text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-slate-900 file:text-white file:font-medium file:cursor-pointer hover:file:bg-slate-700" />
-        {/* existing images (edit mode) */}
-        {isEdit && existing!.images.length > 0 && (
-          <div className="mt-3">
-            <p className="text-xs text-slate-500 mb-2">Existing images (uncheck to remove):</p>
-            <div className="flex gap-2 flex-wrap">
-              {existing!.images.map(img => (
-                <label key={img.publicId} className="relative cursor-pointer">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.url} alt="" className={`w-20 h-16 object-cover rounded-lg border-2 transition-all ${keepImages.includes(img.publicId) ? "border-slate-900 opacity-100" : "border-transparent opacity-40"}`} />
-                  <input type="checkbox" className="sr-only" checked={keepImages.includes(img.publicId)}
-                    onChange={e => setKeepImages(prev => e.target.checked ? [...prev, img.publicId] : prev.filter(p => p !== img.publicId))} />
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
-        {coverImages.length > 0 && (
-          <p className="text-xs text-slate-500 mt-1">{coverImages.length} new image(s) selected</p>
-        )}
+      <FormSection title="Images">
+        {(() => {
+          const keptCount = isEdit ? keepImages.length : 0;
+          const total = keptCount + coverImages.length;
+          return (
+            <>
+              <label className="inline-flex items-center gap-2 text-sm font-medium py-2 px-4 rounded-lg transition-colors bg-slate-900 text-white cursor-pointer hover:bg-slate-700">
+                + Add Images
+                <input type="file" multiple accept="image/*" className="hidden"
+                  onChange={e => {
+                    const input = e.currentTarget;
+                    try {
+                      addCoverImages(input.files);
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : "Could not add images");
+                    } finally {
+                      input.value = ""; // allow re-picking the same file
+                    }
+                  }} />
+              </label>
+              <p className="text-xs text-slate-500 mt-2">
+                {total} image{total !== 1 ? "s" : ""} ({keptCount} existing + {coverImages.length} new) · add as many as you like
+              </p>
+              {error && (
+                <p className="text-xs text-red-500 mt-1 bg-red-50 border border-red-100 rounded-lg px-2 py-1">{error}</p>
+              )}
+
+              {/* existing images (edit mode) — kept images shown; deleting removes them from the strip */}
+              {isEdit && existing!.images.length > 0 && (() => {
+                const keptImgs = existing!.images.filter(img => keepImages.includes(img.publicId));
+                const removedImgs = existing!.images.filter(img => !keepImages.includes(img.publicId));
+                return (
+                  <>
+                    {keptImgs.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs text-slate-500 mb-2">Current images:</p>
+                        <div className="flex gap-2 flex-wrap">
+                          {keptImgs.map(img => (
+                            <div key={img.publicId} className="relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={img.url} alt="" className="w-20 h-16 object-cover rounded-lg border-2 border-slate-900" />
+                              <button type="button"
+                                onClick={() => setKeepImages(prev => prev.filter(p => p !== img.publicId))}
+                                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white border border-slate-300 shadow-sm flex items-center justify-center text-xs text-slate-600 hover:bg-red-50 hover:text-red-500"
+                                title="Delete image">
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {removedImgs.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs text-red-500 mb-2">Will be deleted on save ({removedImgs.length}):</p>
+                        <div className="flex gap-2 flex-wrap">
+                          {removedImgs.map(img => (
+                            <div key={img.publicId} className="relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={img.url} alt="" className="w-20 h-16 object-cover rounded-lg border-2 border-red-200 opacity-40" />
+                              <button type="button"
+                                onClick={() => setKeepImages(prev => [...prev, img.publicId])}
+                                className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-slate-700 bg-white/60 rounded-lg hover:bg-white/80"
+                                title="Undo — keep this image">
+                                ↺ Undo
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+
+              {/* newly selected images — previews with remove */}
+              {coverImages.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs text-slate-500 mb-2">New images to upload:</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {coverImages.map((file, i) => (
+                      <div key={`${file.name}-${i}`} className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={coverPreviews[i]} alt={file.name} className="w-20 h-16 object-cover rounded-lg border-2 border-indigo-400" />
+                        <button type="button" onClick={() => removeCoverImage(i)}
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white border border-slate-300 shadow-sm flex items-center justify-center text-xs text-slate-600 hover:bg-red-50 hover:text-red-500"
+                          title="Remove">
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </FormSection>
 
       <FormSection title="Common Amenities">
@@ -298,14 +444,45 @@ export default function PGForm({ existing }: { existing?: ExistingPG }) {
               </div>
               <div>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Room Images</p>
-                <input type="file" multiple accept="image/*"
-                  onChange={e => updateRoom(ri, "newImages", Array.from(e.target.files || []))}
-                  className="text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-100 file:text-slate-700 file:text-xs file:font-medium file:cursor-pointer" />
+                <label className="inline-flex items-center gap-2 text-xs font-medium py-1.5 px-3 rounded-lg bg-slate-100 text-slate-700 cursor-pointer hover:bg-slate-200 transition-colors">
+                  + Add Room Images
+                  <input type="file" multiple accept="image/*" className="hidden"
+                    onChange={e => { const inp = e.currentTarget; addRoomImages(ri, inp.files); inp.value = ""; }} />
+                </label>
+
+                {/* existing room images (edit) — click × to delete */}
                 {room.existingImages.length > 0 && (
-                  <div className="flex gap-2 mt-2">
-                    {room.existingImages.map(img => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={img.publicId} src={img.url} alt="" className="w-16 h-12 object-cover rounded-lg border border-slate-200" />
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    {room.existingImages.map(img => {
+                      const kept = room.keepImageIds.includes(img.publicId);
+                      return (
+                        <div key={img.publicId} className="relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={img.url} alt="" className={`w-16 h-12 object-cover rounded-lg border transition-all ${kept ? "border-slate-200 opacity-100" : "border-red-200 opacity-40"}`} />
+                          <button type="button" onClick={() => toggleKeepRoomImage(ri, img.publicId)}
+                            className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-white border border-slate-300 shadow-sm flex items-center justify-center text-[10px] text-slate-600 hover:bg-slate-100"
+                            title={kept ? "Delete image" : "Undo — keep image"}>
+                            {kept ? "×" : "↺"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* newly picked room images — previews with remove */}
+                {room.newImages.length > 0 && (
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    {room.newImages.map((file, imgIdx) => (
+                      <div key={`${file.name}-${imgIdx}`} className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={roomPreviews[ri]?.[imgIdx]} alt={file.name} className="w-16 h-12 object-cover rounded-lg border-2 border-indigo-400" />
+                        <button type="button" onClick={() => removeNewRoomImage(ri, imgIdx)}
+                          className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-white border border-slate-300 shadow-sm flex items-center justify-center text-[10px] text-slate-600 hover:bg-red-50 hover:text-red-500"
+                          title="Remove">
+                          ×
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}

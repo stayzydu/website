@@ -12,10 +12,14 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: "heystay/pgs",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    // Broadened so common phone/download formats (heic, jfif, avif, gif) don't
+    // cause the whole multi-image request to be rejected.
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "gif", "heic", "heif", "jfif", "avif"],
     transformation: [{ width: 1200, crop: "limit", quality: "auto" }],
   },
 });
 
+// No file-size limit — admins can upload images of any size. (Cloudinary's own
+// account limits still apply on their end.)
 export const upload = multer({ storage });
 export { cloudinary };

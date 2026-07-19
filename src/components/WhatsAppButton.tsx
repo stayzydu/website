@@ -1,6 +1,12 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+
 export default function WhatsAppButton() {
+  const pathname = usePathname();
+  // Hide the floating WhatsApp button on admin pages.
+  if (pathname?.startsWith("/admin")) return null;
+
   return (
     <a
       href="https://wa.me/919958877125?text=Hi%2C%20I%20found%20you%20on%20HeyStay%20and%20I%27m%20looking%20for%20a%20PG%20near%20Delhi%20University."

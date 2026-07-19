@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { apiFetch } from "@/lib/api";
@@ -29,9 +29,11 @@ export default function PGDetailPage() {
   const [pg, setPg] = useState<PG | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
+  const [paused, setPaused] = useState(false);
   const [queryMsg, setQueryMsg] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [showBookModal, setShowBookModal] = useState(false);
+  const thumbStripRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const hardcoded = HARDCODED_PGS.find(p => p._id === id);
@@ -45,6 +47,23 @@ export default function PGDetailPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Auto-scroll the gallery: advance every 3.5s, paused on hover/focus.
+  const imageCount = pg?.images?.length ?? 0;
+  useEffect(() => {
+    if (paused || imageCount <= 1) return;
+    const t = setInterval(() => {
+      setActiveImg(i => (i + 1) % imageCount);
+    }, 3500);
+    return () => clearInterval(t);
+  }, [paused, imageCount]);
+
+  // Keep the active thumbnail visible as the gallery advances.
+  useEffect(() => {
+    const strip = thumbStripRef.current;
+    const thumb = strip?.children[activeImg] as HTMLElement | undefined;
+    thumb?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [activeImg]);
 
   if (loading) return (
     <div className="min-h-screen bg-[#f8faff]">
@@ -78,17 +97,38 @@ export default function PGDetailPage() {
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 mb-10">
 
           {/* image gallery */}
-          <div className="w-full md:w-1/2 space-y-3">
-            <div className="rounded-2xl overflow-hidden h-64 sm:h-80 bg-slate-100">
+          <div className="w-full md:w-1/2 space-y-3"
+            onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+            <div className="relative rounded-2xl overflow-hidden h-64 sm:h-80 bg-slate-100">
               {pg.images?.[activeImg] ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={pg.images[activeImg].url} alt={pg.name} className="w-full h-full object-cover" />
+                <img key={activeImg} src={pg.images[activeImg].url} alt={pg.name}
+                  className="w-full h-full object-cover animate-fade-in" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-slate-300 text-6xl">🏢</div>
               )}
+              {pg.images.length > 1 && (
+                <>
+                  {/* prev / next */}
+                  <button type="button" aria-label="Previous image"
+                    onClick={() => setActiveImg(i => (i - 1 + pg.images.length) % pg.images.length)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-slate-700 flex items-center justify-center shadow-sm transition-colors">‹</button>
+                  <button type="button" aria-label="Next image"
+                    onClick={() => setActiveImg(i => (i + 1) % pg.images.length)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-slate-700 flex items-center justify-center shadow-sm transition-colors">›</button>
+                  {/* dots */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                    {pg.images.map((_, i) => (
+                      <button key={i} type="button" aria-label={`Go to image ${i + 1}`}
+                        onClick={() => setActiveImg(i)}
+                        className={`h-1.5 rounded-full transition-all ${activeImg === i ? "w-5 bg-white" : "w-1.5 bg-white/60 hover:bg-white/90"}`} />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
             {pg.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
+              <div ref={thumbStripRef} className="flex gap-2 overflow-x-auto pb-1">
                 {pg.images.map((img, i) => (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img key={i} src={img.url} alt="" onClick={() => setActiveImg(i)}

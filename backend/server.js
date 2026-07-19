@@ -10,7 +10,8 @@ import instituteRoutes from "./routes/institute.js";
 import User from "./models/User.js";
 import PG from "./models/PG.js";
 import Visit from "./models/Visit.js";
-import PromoPayment from "./models/PromoPayment.js";
+import Lead from "./models/Lead.js";
+import PaidLead from "./models/PaidLead.js";
 import Institute from "./models/Institute.js";
 import Referral from "./models/Referral.js";
 
@@ -43,6 +44,16 @@ app.use("/api/institutes", instituteRoutes);
 
 app.get("/api/health", (_, res) => res.json({ ok: true }));
 
+// Error handler — turns multer/upload failures (bad format, too large, too many
+// files) into clean JSON instead of a default HTML response that rejects the
+// whole request silently.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error("API error:", err.message);
+  const status = err.status || (err.name === "MulterError" ? 400 : 500);
+  res.status(status).json({ error: err.message || "Server error" });
+});
+
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(async () => {
@@ -52,10 +63,11 @@ mongoose
     await User.createCollection();
     await PG.createCollection();
     await Visit.createCollection();
-    await PromoPayment.createCollection();
+    await Lead.createCollection();
+    await PaidLead.createCollection();
     await Institute.createCollection();
     await Referral.createCollection();
-    console.log("Collections ready: users, pgs, visits, promopayments, institutes, referrals");
+    console.log("Collections ready: users, pgs, visits, leads, paidleads, institutes, referrals");
 
     app.listen(process.env.PORT || 5000, () =>
       console.log(`Server running on port ${process.env.PORT || 5000}`)

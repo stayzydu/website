@@ -2,7 +2,7 @@ import express from "express";
 import crypto from "crypto";
 import Institute from "../models/Institute.js";
 import Referral from "../models/Referral.js";
-import PromoPayment from "../models/PromoPayment.js";
+import PaidLead from "../models/PaidLead.js";
 import User from "../models/User.js";
 import { requireAdmin, requireAuth } from "../lib/clerkAuth.js";
 
@@ -96,7 +96,7 @@ router.post("/validate-code", async (req, res) => {
 router.post("/check-phone", async (req, res) => {
   try {
     const { phone } = req.body;
-    const existing = await PromoPayment.findOne({ phone: phone.trim() });
+    const existing = await PaidLead.findOne({ phone: phone.trim() });
     if (existing) return res.json({ used: true });
     res.json({ used: false });
   } catch (err) {

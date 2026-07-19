@@ -48,19 +48,46 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// Map a multer file to our stored image shape.
+const toImage = (f) => ({ url: f.path, publicId: f.filename });
+
+// Group uploaded files by field name. Cover images arrive under "images";
+// room images arrive under "roomImages_<index>".
+function groupFiles(files) {
+  const cover = [];
+  const roomsByIndex = {}; // { [index]: [image, ...] }
+  for (const f of files || []) {
+    if (f.fieldname === "images") {
+      cover.push(toImage(f));
+    } else if (f.fieldname.startsWith("roomImages_")) {
+      const idx = Number(f.fieldname.slice("roomImages_".length));
+      (roomsByIndex[idx] ||= []).push(toImage(f));
+    }
+  }
+  return { cover, roomsByIndex };
+}
+
 // POST create PG (admin only)
 router.post(
   "/",
   requireAdmin,
-  upload.array("images", 20),
+  upload.any(), // accepts "images" + any "roomImages_<i>" fields
   async (req, res) => {
     try {
       const body = JSON.parse(req.body.data);
-      const images = (req.files || []).map((f) => ({
-        url: f.path,
-        publicId: f.filename,
+      const { cover, roomsByIndex } = groupFiles(req.files);
+
+      const rooms = (body.rooms || []).map((room, i) => ({
+        ...room,
+        images: roomsByIndex[i] || [],
       }));
-      const pg = await PG.create({ ...body, images, createdBy: req.user._id });
+
+      const pg = await PG.create({
+        ...body,
+        images: cover,
+        rooms,
+        createdBy: req.user._id,
+      });
       res.status(201).json(pg);
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -72,25 +99,35 @@ router.post(
 router.patch(
   "/:id",
   requireAdmin,
-  upload.array("images", 20),
+  upload.any(),
   async (req, res) => {
     try {
       const body = JSON.parse(req.body.data);
-      const newImages = (req.files || []).map((f) => ({
-        url: f.path,
-        publicId: f.filename,
-      }));
+      const { cover, roomsByIndex } = groupFiles(req.files);
+
       const pg = await PG.findById(req.params.id);
       if (!pg) return res.status(404).json({ error: "Not found" });
 
-      // merge images
+      // Cover images: keep the ones the admin didn't delete, add the new ones.
       const keepImages = body.keepImages || [];
-      const merged = [
+      const mergedCover = [
         ...pg.images.filter((img) => keepImages.includes(img.publicId)),
-        ...newImages,
+        ...cover,
       ];
 
-      Object.assign(pg, { ...body, images: merged });
+      // Rooms: per room, keep the retained existing images and add new uploads.
+      // Existing room images are matched from the current PG doc by index.
+      const rooms = (body.rooms || []).map((room, i) => {
+        const keepImageIds = room.keepImageIds || [];
+        const existing = pg.rooms[i]?.images || [];
+        const keptImages = existing.filter((img) =>
+          keepImageIds.includes(img.publicId)
+        );
+        const { keepImageIds: _drop, ...roomFields } = room;
+        return { ...roomFields, images: [...keptImages, ...(roomsByIndex[i] || [])] };
+      });
+
+      Object.assign(pg, { ...body, images: mergedCover, rooms });
       await pg.save();
       res.json(pg);
     } catch (err) {
@@ -118,7 +155,7 @@ router.delete("/:id", requireAdmin, async (req, res) => {
 router.post(
   "/:id/rooms/:roomIndex/images",
   requireAdmin,
-  upload.array("images", 10),
+  upload.array("images", 100),
   async (req, res) => {
     try {
       const pg = await PG.findById(req.params.id);
