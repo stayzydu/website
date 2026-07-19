@@ -23,6 +23,9 @@ const pgSchema = new mongoose.Schema(
     mapLng: { type: Number },
     rooms: [roomSchema],
     isPublished: { type: Boolean, default: true },
+    // Featured on the home page carousel; featuredOrder controls the sequence.
+    isFeatured: { type: Boolean, default: false },
+    featuredOrder: { type: Number, default: 0 },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }

@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { apiFetch } from "@/lib/api";
-import { HARDCODED_PGS } from "@/lib/hardcodedPGs";
 import WishlistButton from "@/components/WishlistButton";
 import BookVisitModal from "@/components/BookVisitModal";
 
@@ -36,12 +35,6 @@ export default function PGDetailPage() {
   const thumbStripRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const hardcoded = HARDCODED_PGS.find(p => p._id === id);
-    if (hardcoded) {
-      setPg(hardcoded as unknown as PG);
-      setLoading(false);
-      return;
-    }
     apiFetch(`/api/pgs/${id}`)
       .then(setPg)
       .catch(console.error)

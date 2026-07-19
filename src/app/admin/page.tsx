@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminPGs from "@/components/admin/AdminPGs";
+import AdminFeaturedPGs from "@/components/admin/AdminFeaturedPGs";
 import AdminVisits from "@/components/admin/AdminVisits";
 import AdminPaidUsers from "@/components/admin/AdminPaidUsers";
 import AdminLeads from "@/components/admin/AdminLeads";
 import AdminReferrals from "@/components/admin/AdminReferrals";
 
-type Tab = "users" | "pgs" | "visits" | "leads" | "paid" | "referrals";
+type Tab = "users" | "pgs" | "featured" | "visits" | "leads" | "paid" | "referrals";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("pgs");
@@ -60,7 +61,7 @@ export default function AdminPage() {
         </div>
 
         <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-max max-w-full overflow-x-auto mb-8">
-          {([["pgs", "PG Listings"], ["visits", "Visit Requests"], ["users", "Users"], ["leads", "Leads"], ["paid", "Paid Leads"], ["referrals", "Referrals"]] as [Tab, string][]).map(([t, label]) => (
+          {([["pgs", "PG Listings"], ["featured", "Featured PGs"], ["visits", "Visit Requests"], ["users", "Users"], ["leads", "Leads"], ["paid", "Paid Leads"], ["referrals", "Referrals"]] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => setTab(t)}
               className={`shrink-0 whitespace-nowrap px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
               {label}
@@ -69,6 +70,7 @@ export default function AdminPage() {
         </div>
 
         {tab === "pgs" && <AdminPGs />}
+        {tab === "featured" && <AdminFeaturedPGs />}
         {tab === "visits" && <AdminVisits />}
         {tab === "users" && <AdminUsers />}
         {tab === "leads" && <AdminLeads />}

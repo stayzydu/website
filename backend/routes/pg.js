@@ -37,6 +37,39 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET featured PGs (public) — ordered by the admin-set featuredOrder.
+// NOTE: must be declared before "/:id" or Express treats "featured" as an id.
+router.get("/featured", async (req, res) => {
+  try {
+    const pgs = await PG.find({ isFeatured: true, isPublished: true })
+      .sort({ featuredOrder: 1, createdAt: -1 });
+    res.json(pgs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH featured selection/order (admin) — body: { items: [{ id, order }] }
+// Replaces the whole featured set in one call.
+router.patch("/featured/set", requireAdmin, async (req, res) => {
+  try {
+    const items = Array.isArray(req.body.items) ? req.body.items : [];
+    // Clear existing featured flags, then apply the new selection + order.
+    await PG.updateMany({ isFeatured: true }, { $set: { isFeatured: false, featuredOrder: 0 } });
+    await Promise.all(
+      items.map((it, i) =>
+        PG.findByIdAndUpdate(it.id, {
+          $set: { isFeatured: true, featuredOrder: typeof it.order === "number" ? it.order : i },
+        })
+      )
+    );
+    const pgs = await PG.find({ isFeatured: true }).sort({ featuredOrder: 1 });
+    res.json(pgs);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // GET single PG (public)
 router.get("/:id", async (req, res) => {
   try {

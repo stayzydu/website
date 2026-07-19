@@ -1,7 +1,7 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { HARDCODED_PGS } from "@/lib/hardcodedPGs";
+import { apiFetch } from "@/lib/api";
 
 const FOR_COLOR: Record<string, string> = {
   Girls: "bg-pink-50 text-pink-600",
@@ -9,10 +9,30 @@ const FOR_COLOR: Record<string, string> = {
   Both: "bg-purple-50 text-purple-600",
 };
 
+type Room = { type: string; pricePerBed: number };
+type FeaturedPG = {
+  _id: string;
+  name: string;
+  location: string;
+  pgFor: string;
+  images: { url: string }[];
+  rooms: Room[];
+  commonAmenities: string[];
+};
+
 export default function FeaturedPGs() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
-  const total = HARDCODED_PGS.length;
+  const [pgs, setPgs] = useState<FeaturedPG[]>([]);
+  const [loading, setLoading] = useState(true);
+  const total = pgs.length;
+
+  useEffect(() => {
+    apiFetch("/api/pgs/featured")
+      .then(data => setPgs(Array.isArray(data) ? data : []))
+      .catch(() => setPgs([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   function scrollTo(idx: number) {
     const el = trackRef.current;
@@ -36,6 +56,32 @@ export default function FeaturedPGs() {
     setActive(closest);
   }
 
+  // Nothing to show until the admin features some PGs — hide the whole section.
+  if (!loading && total === 0) return null;
+
+  if (loading) return (
+    <section className="pt-20 pb-10 dot-bg" id="featured">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-10">
+          <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">Near Delhi University</p>
+          <h2 className="text-3xl font-black text-slate-900">Featured PGs</h2>
+        </div>
+        <div className="flex gap-5 overflow-hidden">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="shrink-0 w-64 sm:w-72 bg-white rounded-2xl border border-slate-100 overflow-hidden animate-pulse">
+              <div className="h-44 bg-slate-100" />
+              <div className="p-4 space-y-2">
+                <div className="h-4 bg-slate-100 rounded w-3/4" />
+                <div className="h-3 bg-slate-100 rounded w-1/2" />
+                <div className="h-8 bg-slate-100 rounded mt-4" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+
   return (
     <section className="pt-20 pb-10 dot-bg" id="featured">
       <div className="max-w-7xl mx-auto px-6">
@@ -53,15 +99,22 @@ export default function FeaturedPGs() {
         <div ref={trackRef} onScroll={onScroll}
           className="flex gap-5 overflow-x-auto scroll-smooth pb-4"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-          {HARDCODED_PGS.map((pg) => {
-            const minPrice = Math.min(...pg.rooms.map(r => r.pricePerBed));
-            const roomTypes = [...new Set(pg.rooms.map(r => r.type))].join(", ");
+          {pgs.map((pg) => {
+            const prices = pg.rooms?.map(r => r.pricePerBed) ?? [];
+            const minPrice = prices.length ? Math.min(...prices) : 0;
+            const roomTypes = [...new Set(pg.rooms?.map(r => r.type) ?? [])].join(", ");
+            const cover = pg.images?.[0]?.url;
+            const amenities = pg.commonAmenities ?? [];
             return (
               <div key={pg._id} className="shrink-0 w-64 sm:w-72 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group flex flex-col">
-                <div className="relative h-44 overflow-hidden shrink-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={pg.images[0].url} alt={pg.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <span className={`absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full ${FOR_COLOR[pg.pgFor]}`}>{pg.pgFor}</span>
+                <div className="relative h-44 overflow-hidden shrink-0 bg-slate-100">
+                  {cover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={cover} alt={pg.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-300 text-4xl">🏢</div>
+                  )}
+                  <span className={`absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full ${FOR_COLOR[pg.pgFor] ?? "bg-slate-100 text-slate-600"}`}>{pg.pgFor}</span>
                 </div>
                 <div className="p-4 flex flex-col flex-1">
                   <h3 className="font-bold text-slate-900 text-base truncate">{pg.name}</h3>
@@ -74,10 +127,10 @@ export default function FeaturedPGs() {
                     <span className="text-xs text-slate-500">{roomTypes}</span>
                   </div>
                   <div className="flex gap-1.5 flex-wrap mt-3 min-h-7">
-                    {pg.commonAmenities.slice(0, 3).map(a => (
+                    {amenities.slice(0, 3).map(a => (
                       <span key={a} className="text-xs bg-slate-50 text-slate-600 border border-slate-100 px-2 py-0.5 rounded-full">{a}</span>
                     ))}
-                    {pg.commonAmenities.length > 3 && <span className="text-xs text-slate-400">+{pg.commonAmenities.length - 3}</span>}
+                    {amenities.length > 3 && <span className="text-xs text-slate-400">+{amenities.length - 3}</span>}
                   </div>
                   <Link href={`/pgs/${pg._id}`}
                     className="mt-auto pt-4 block w-full text-center py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-700 transition-colors">
@@ -90,7 +143,7 @@ export default function FeaturedPGs() {
         </div>
 
         <div className="flex justify-center gap-2 mt-6">
-          {HARDCODED_PGS.map((_, i) => (
+          {pgs.map((_, i) => (
             <button key={i} onClick={() => scrollTo(i)}
               className={`rounded-full transition-all ${i === active ? "w-6 h-2 bg-indigo-500" : "w-2 h-2 bg-slate-200"}`} />
           ))}

@@ -4,7 +4,6 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import WishlistButton from "@/components/WishlistButton";
 import { getWishlist } from "@/lib/wishlist";
-import { HARDCODED_PGS } from "@/lib/hardcodedPGs";
 import { apiFetch } from "@/lib/api";
 
 type PG = { _id: string; name: string; location: string; pgFor: string; images: { url: string }[]; rooms: { pricePerBed: number }[] };
@@ -28,8 +27,6 @@ export default function WishlistPage() {
     if (!ids.length) { setPgs([]); setLoading(false); return; }
     const results: PG[] = [];
     for (const id of ids) {
-      const hc = HARDCODED_PGS.find(p => p._id === id);
-      if (hc) { results.push(hc as unknown as PG); continue; }
       try { results.push(await apiFetch(`/api/pgs/${id}`)); } catch { /* skip */ }
     }
     setPgs(results);
