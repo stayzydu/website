@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
 function TypeLine({ show, text }: { show: boolean; text: string }) {
@@ -326,14 +327,14 @@ export default function HeroSection() {
 
             {/* CTA — below the animation on mobile, after the subtext on desktop */}
             <div style={fadeUp(phase >= 5, 150)}>
-              <button className="mt-6 lg:mt-7 px-7 py-3.5 bg-slate-900 text-white text-sm font-semibold rounded-xl tracking-wide cursor-pointer"
+              <Link href="/pgs" className="mt-6 lg:mt-7 inline-flex px-7 py-3.5 bg-slate-900 text-white text-sm font-semibold rounded-xl tracking-wide cursor-pointer"
                 style={{ transition: "background 0.2s, transform 0.15s" }}
                 onMouseEnter={e => (e.currentTarget.style.background = "#1e293b")}
                 onMouseLeave={e => (e.currentTarget.style.background = "#0f172a")}
                 onMouseDown={e => (e.currentTarget.style.transform = "scale(0.97)")}
                 onMouseUp={e => (e.currentTarget.style.transform = "scale(1)")}>
                 Find your perfect stay &rarr;
-              </button>
+              </Link>
             </div>
 
           </div>
